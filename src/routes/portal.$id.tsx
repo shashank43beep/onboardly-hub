@@ -1,4 +1,4 @@
-import { createFileRoute, notFound, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Circle, Upload, FileText, CreditCard, Calendar, PartyPopper, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,14 +37,25 @@ function ClientPortal() {
   const { id } = Route.useParams();
   const [portal, setPortal] = useState<Portal | null>(null);
   const [section, setSection] = useState<Section>("welcome");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const p = portalStore.get(id);
-    if (!p) throw notFound();
-    setPortal(p);
+    setPortal(portalStore.get(id) ?? null);
+    setReady(true);
   }, [id]);
 
-  if (!portal) return null;
+  if (!ready) return null;
+  if (!portal) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="text-center">
+          <h1 className="text-3xl font-semibold">Portal not found</h1>
+          <p className="mt-2 text-muted-foreground">This onboarding link is invalid or has expired.</p>
+          <Button asChild className="mt-6"><Link to="/">Go home</Link></Button>
+        </div>
+      </div>
+    );
+  }
 
   const refresh = () => setPortal(portalStore.get(id) ?? portal);
 
