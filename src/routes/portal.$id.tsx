@@ -19,15 +19,6 @@ export const Route = createFileRoute("/portal/$id")({
     ],
   }),
   component: ClientPortal,
-  notFoundComponent: () => (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="text-center">
-        <h1 className="text-3xl font-semibold">Portal not found</h1>
-        <p className="mt-2 text-muted-foreground">This onboarding link is invalid or has expired.</p>
-        <Button asChild className="mt-6"><Link to="/">Go home</Link></Button>
-      </div>
-    </div>
-  ),
 });
 
 const sections = ["welcome", "form", "files", "payment", "meeting", "done"] as const;
