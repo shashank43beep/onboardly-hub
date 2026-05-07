@@ -38,11 +38,17 @@ function NewPortal() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const portal = portalStore.create(form);
-      toast.success("Portal created");
-      setTimeout(() => navigate({ to: "/portal/$id", params: { id: portal.id } }), 400);
-    } catch {
-      toast.error("Could not create portal");
+      console.log("Creating portal with data:", form);
+      const portal = await portalStore.create(form);
+      if (portal) {
+        toast.success("Portal created");
+        setTimeout(() => navigate({ to: "/portal/$id", params: { id: portal.id } }), 400);
+      } else {
+        throw new Error("Failed to create portal in database");
+      }
+    } catch (err) {
+      console.error("Portal creation error:", err);
+      toast.error("Could not create portal. Please check your database connection.");
       setSubmitting(false);
     }
   }
