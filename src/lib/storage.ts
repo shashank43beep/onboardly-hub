@@ -61,9 +61,93 @@ function write(items: Portal[]) {
 }
 
 export const portalStore = {
-  list: () => read(),
+  list: async () => {
+    // Start with local ones
+    const local = read();
+    
+    // Try to fetch from Supabase
+    try {
+      const { data, error } = await supabase
+        .from('portals')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  get: (id: string) => read().find((p) => p.id === id),
+      if (data && !error) {
+        // Map Supabase data to our Portal type
+        const remotePortals: Portal[] = data.map(p => ({
+          id: p.id,
+          portalName: p.portal_name,
+          clientName: p.client_name,
+          welcomeMessage: p.welcome_message,
+          brandLogo: p.brand_logo || '',
+          paymentLink: p.payment_link || '',
+          meetingLink: p.booking_link || '',
+          webhookUrl: p.webhook_url || '',
+          createdAt: p.created_at,
+          progress: {
+            formComplete: false,
+            filesUploaded: false,
+            paymentCompleted: false,
+            meetingBooked: false,
+          }
+        }));
+
+        // Merge local progress with remote portals
+        const merged = remotePortals.map(remote => {
+          const matchingLocal = local.find(l => l.id === remote.id);
+          if (matchingLocal) {
+            return { ...remote, progress: matchingLocal.progress };
+          }
+          return remote;
+        });
+
+        write(merged);
+        return merged;
+      }
+    } catch (e) {
+      console.error("Failed to fetch portals from Supabase", e);
+    }
+    
+    return local;
+  },
+
+  get: async (id: string) => {
+    // Try Supabase first for the most up-to-date data
+    try {
+      const { data, error } = await supabase
+        .from('portals')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (data && !error) {
+        const local = read();
+        const matchingLocal = local.find(l => l.id === id);
+        
+        return {
+          id: data.id,
+          portalName: data.portal_name,
+          clientName: data.client_name,
+          welcomeMessage: data.welcome_message,
+          brandLogo: data.brand_logo || '',
+          paymentLink: data.payment_link || '',
+          meetingLink: data.booking_link || '',
+          webhookUrl: data.webhook_url || '',
+          createdAt: data.created_at,
+          progress: matchingLocal?.progress || {
+            formComplete: false,
+            filesUploaded: false,
+            paymentCompleted: false,
+            meetingBooked: false,
+          }
+        };
+      }
+    } catch (e) {
+      console.error("Failed to fetch portal from Supabase", e);
+    }
+
+    return read().find((p) => p.id === id);
+  },
 
   create: async (data: Omit<Portal, "id" | "createdAt" | "progress">) => {
     const portal: Portal = {

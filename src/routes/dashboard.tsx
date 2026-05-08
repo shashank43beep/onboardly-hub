@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, ExternalLink, CheckCircle2, Circle, Copy } from "lucide-react";
+import { Plus, ExternalLink, CheckCircle2, Circle, Copy, Loader2 } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,7 +21,22 @@ function progressPct(p: Portal["progress"]) {
 
 function Dashboard() {
   const [portals, setPortals] = useState<Portal[]>([]);
-  useEffect(() => setPortals(portalStore.list()), []);
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+
+  useEffect(() => {
+    async function load() {
+      const data = await portalStore.list();
+      setPortals(data);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  // If we are on a child route (like /dashboard/new), only render the outlet
+  if (location.pathname !== "/dashboard") {
+    return <Outlet />;
+  }
 
   return (
     <SiteLayout>
@@ -37,7 +52,11 @@ function Dashboard() {
           </Button>
         </div>
 
-        {portals.length === 0 ? (
+        {loading ? (
+          <div className="mt-20 flex justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : portals.length === 0 ? (
           <Card className="mt-12 flex flex-col items-center p-12 text-center">
             <p className="text-muted-foreground">No portals yet. Create your first one.</p>
             <Button asChild className="mt-4" style={{ background: "var(--gradient-hero)" }}>

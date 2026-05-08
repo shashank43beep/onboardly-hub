@@ -13,6 +13,7 @@ import {
   Loader2,
   FileIcon,
   X,
+  ExternalLink,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -41,19 +42,34 @@ function ClientPortal() {
   const { id } = Route.useParams();
   const [portal, setPortal] = useState<Portal | null>(null);
   const [section, setSection] = useState<Section>("welcome");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const found = portalStore.get(id);
-    if (found) {
-      setPortal(found);
-      // Determine starting section based on progress
-      if (!found.progress.formComplete) setSection("form");
-      else if (!found.progress.filesUploaded) setSection("files");
-      else if (!found.progress.paymentCompleted) setSection("payment");
-      else if (!found.progress.meetingBooked) setSection("meeting");
-      else setSection("done");
+    async function load() {
+      const found = await portalStore.get(id);
+      if (found) {
+        setPortal(found);
+        // Determine starting section based on progress
+        if (!found.progress.formComplete) setSection("form");
+        else if (!found.progress.filesUploaded) setSection("files");
+        else if (!found.progress.paymentCompleted) setSection("payment");
+        else if (!found.progress.meetingBooked) setSection("meeting");
+        else setSection("done");
+      }
+      setLoading(false);
     }
+    load();
   }, [id]);
+
+  if (loading) {
+    return (
+      <SiteLayout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </SiteLayout>
+    );
+  }
 
   if (!portal) {
     return (
@@ -69,8 +85,8 @@ function ClientPortal() {
     );
   }
 
-  const refresh = () => {
-    const updated = portalStore.get(id);
+  const refresh = async () => {
+    const updated = await portalStore.get(id);
     if (updated) setPortal(updated);
   };
 
@@ -185,22 +201,52 @@ function WelcomeStep({ portal, onNext }: { portal: Portal; onNext: () => void })
 
 function FormStep({ portal, onDone }: { portal: Portal; onDone: () => void }) {
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [data, setData] = useState({
     projectName: portal.portalName,
     goals: "",
     website: "",
   });
 
+  useEffect(() => {
+    async function loadSubmission() {
+      try {
+        const { data: submission, error } = await supabase
+          .from("submissions")
+          .select("project_details")
+          .eq("portal_id", portal.id)
+          .maybeSingle();
+
+        if (submission && !error) {
+          const details = typeof submission.project_details === 'string' 
+            ? JSON.parse(submission.project_details) 
+            : submission.project_details;
+          setData({
+            projectName: details.projectName || portal.portalName,
+            goals: details.goals || "",
+            website: details.website || "",
+          });
+        }
+      } catch (err) {
+        console.error("Error loading submission:", err);
+      } finally {
+        setFetching(false);
+      }
+    }
+    loadSubmission();
+  }, [portal.id]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("submissions").insert([{
+      // Upsert submission
+      const { error } = await supabase.from("submissions").upsert([{
         portal_id: portal.id,
         client_name: portal.clientName,
         project_details: data,
-      }]);
+      }], { onConflict: 'portal_id' });
 
       await postToWebhook(portal.webhookUrl, { type: "form_submission", portalId: portal.id, data });
 
@@ -212,6 +258,14 @@ function FormStep({ portal, onDone }: { portal: Portal; onDone: () => void }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (fetching) {
+    return (
+      <Card className="flex h-[300px] items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </Card>
+    );
   }
 
   return (
@@ -243,8 +297,30 @@ function FormStep({ portal, onDone }: { portal: Portal; onDone: () => void }) {
 
 function FilesStep({ portal, onDone }: { portal: Portal; onDone: () => void }) {
   const [files, setFiles] = useState<File[]>([]);
+  const [existingFiles, setExistingFiles] = useState<{ name: string; url: string }[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    async function loadExisting() {
+      try {
+        const { data, error } = await supabase.storage.from("client-assets").list(portal.id);
+        if (data && !error) {
+          const fileList = data.map(f => ({
+            name: f.name,
+            url: supabase.storage.from("client-assets").getPublicUrl(`${portal.id}/${f.name}`).data.publicUrl
+          }));
+          setExistingFiles(fileList);
+        }
+      } catch (err) {
+        console.error("Error loading files:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadExisting();
+  }, [portal.id]);
 
   const handleFiles = (newFiles: FileList | null) => {
     if (!newFiles) return;
@@ -281,6 +357,16 @@ function FilesStep({ portal, onDone }: { portal: Portal; onDone: () => void }) {
 
       await postToWebhook(portal.webhookUrl, { type: "files_uploaded", portalId: portal.id, count: files.length });
 
+      // Refresh existing files
+      const { data } = await supabase.storage.from("client-assets").list(portal.id);
+      if (data) {
+        setExistingFiles(data.map(f => ({
+          name: f.name,
+          url: supabase.storage.from("client-assets").getPublicUrl(`${portal.id}/${f.name}`).data.publicUrl
+        })));
+      }
+
+      setFiles([]); // Clear local selection
       portalStore.updateProgress(portal.id, { filesUploaded: true });
       toast.success("All files uploaded successfully");
       onDone();
@@ -291,12 +377,36 @@ function FilesStep({ portal, onDone }: { portal: Portal; onDone: () => void }) {
     }
   }
 
+  if (loading) {
+    return (
+      <Card className="flex h-[300px] items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-8 md:p-10" style={{ boxShadow: "var(--shadow-soft)" }}>
       <div className="mb-8 text-center md:text-left">
         <h2 className="text-2xl font-semibold">Asset Upload</h2>
         <p className="mt-1 text-muted-foreground">Upload brand assets, logos, and any other relevant files.</p>
       </div>
+
+      {existingFiles.length > 0 && (
+        <div className="mb-8 space-y-3">
+          <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Already uploaded ({existingFiles.length})</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {existingFiles.map((file, i) => (
+              <a key={i} href={file.url} target="_blank" rel="noopener noreferrer" 
+                 className="flex items-center gap-3 rounded-lg border bg-primary/5 p-3 transition-colors hover:bg-primary/10">
+                <FileIcon className="h-5 w-5 text-primary" />
+                <span className="flex-1 truncate text-sm font-medium">{file.name}</span>
+                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div
         onDragOver={onDragOver}
