@@ -11,5 +11,8 @@ export default defineConfig({
     tsconfigPaths(),
     tailwindcss(),
   ],
+  build: {
+    target: "esnext",
+  },
 });
 
