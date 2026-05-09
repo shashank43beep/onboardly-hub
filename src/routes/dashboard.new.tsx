@@ -15,15 +15,13 @@ function NewPortalPage() {
 
   useEffect(() => {
     async function checkUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      // getSession() reads from localStorage — no network call, works reliably on Vercel
+      const { data: { session }, error } = await supabase.auth.getSession();
+      console.log("Session check:", session, error);
+      if (!session) {
         window.location.href = "/login";
       }
     }
-
     checkUser();
   }, []);
 
@@ -37,6 +35,7 @@ function NewPortalPage() {
     }
 
     setLoading(true);
+    console.log("Creating portal...");
 
     try {
       const portal = await portalStore.create({
@@ -49,14 +48,15 @@ function NewPortalPage() {
         webhookUrl: "",
       });
 
+      console.log("Portal created:", portal);
+
       if (!portal?.id) {
         throw new Error("Portal not created");
       }
 
-      alert(`Portal created successfully! ID: ${portal.id}`);
       window.location.href = "/dashboard";
     } catch (err) {
-      console.error(err);
+      console.error("Create portal error:", err);
       setError("Failed to create portal");
     } finally {
       setLoading(false);
@@ -64,21 +64,10 @@ function NewPortalPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: "40px",
-        background: "#f8fafc",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <h1 style={{ fontSize: "30px", marginBottom: "24px" }}>
-        Create Portal
-      </h1>
+    <div style={{ minHeight: "100vh", padding: "40px", background: "#f8fafc", fontFamily: "Arial, sans-serif" }}>
+      <h1 style={{ fontSize: "30px", marginBottom: "24px" }}>Create Portal</h1>
 
-      {error && (
-        <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>
-      )}
+      {error && <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>}
 
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "20px" }}>
@@ -87,41 +76,22 @@ function NewPortalPage() {
             placeholder="Portal Name"
             value={portalName}
             onChange={(e) => setPortalName(e.target.value)}
-            style={{
-              width: "320px",
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-            }}
+            style={{ width: "320px", padding: "12px", borderRadius: "8px", border: "1px solid #ccc" }}
           />
         </div>
-
         <div style={{ marginBottom: "20px" }}>
           <input
             type="text"
             placeholder="Client Name"
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
-            style={{
-              width: "320px",
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-            }}
+            style={{ width: "320px", padding: "12px", borderRadius: "8px", border: "1px solid #ccc" }}
           />
         </div>
-
         <button
           type="submit"
           disabled={loading}
-          style={{
-            padding: "12px 18px",
-            background: "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-          }}
+          style={{ padding: "12px 18px", background: "#2563eb", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}
         >
           {loading ? "Creating..." : "Create Portal"}
         </button>
