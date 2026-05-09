@@ -250,7 +250,7 @@ function FormStep({ portal, onDone }: { portal: Portal; onDone: () => void }) {
 
       await postToWebhook(portal.webhookUrl, { type: "form_submission", portalId: portal.id, data });
 
-      portalStore.updateProgress(portal.id, { formComplete: true });
+      await portalStore.updateProgress(portal.id, { formComplete: true });
       toast.success("Form submitted successfully");
       onDone();
     } catch (err) {
@@ -367,7 +367,7 @@ function FilesStep({ portal, onDone }: { portal: Portal; onDone: () => void }) {
       }
 
       setFiles([]); // Clear local selection
-      portalStore.updateProgress(portal.id, { filesUploaded: true });
+      await portalStore.updateProgress(portal.id, { filesUploaded: true });
       toast.success("All files uploaded successfully");
       onDone();
     } catch (err) {
@@ -464,7 +464,7 @@ function PaymentStep({ portal, onDone }: { portal: Portal; onDone: () => void })
 
   async function handleComplete() {
     setLoading(true);
-    portalStore.updateProgress(portal.id, { paymentCompleted: true });
+    await portalStore.updateProgress(portal.id, { paymentCompleted: true });
     await postToWebhook(portal.webhookUrl, { type: "payment_complete", portalId: portal.id });
     toast.success("Payment confirmed");
     onDone();
@@ -514,8 +514,8 @@ function MeetingStep({ portal, onDone }: { portal: Portal; onDone: () => void })
         ) : (
           <p className="text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">No meeting link provided by the agency.</p>
         )}
-        <Button variant="ghost" className="text-muted-foreground" onClick={() => {
-          portalStore.updateProgress(portal.id, { meetingBooked: true });
+        <Button variant="ghost" className="text-muted-foreground" onClick={async () => {
+          await portalStore.updateProgress(portal.id, { meetingBooked: true });
           onDone();
         }}>
           Skip / I'll book later

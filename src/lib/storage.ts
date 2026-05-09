@@ -18,37 +18,28 @@ export type Portal = {
   progress: PortalProgress;
 };
 
-const KEY = "onboardly.portals";
-
-const seed: Portal[] = [];
-
-function read(): Portal[] {
-  if (typeof window === "undefined") return [];
-
-  try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as Portal[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function write(items: Portal[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(KEY, JSON.stringify(items));
-}
+const STORAGE_KEY = "onboardly_portals";
 
 export const portalStore = {
-  list: () => read(),
+  async list(): Promise<Portal[]> {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  },
 
-  get: (id: string) => read().find((p) => p.id === id),
+  async get(id: string): Promise<Portal | null> {
+    return (await this.list()).find((portal) => portal.id === id) || null;
+  },
 
-  create: (data: Omit<Portal, "id" | "createdAt" | "progress">) => {
-    const all = read();
+  async create(data: Omit<Portal, "id" | "createdAt" | "progress">): Promise<Portal> {
+    const portals = await this.list();
 
-    const portal: Portal = {
+    const newPortal: Portal = {
       ...data,
-      id: Math.random().toString(36).slice(2, 10),
+      id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       progress: {
         formComplete: false,
@@ -58,36 +49,28 @@ export const portalStore = {
       },
     };
 
-    write([portal, ...all]);
-    return portal;
+    const updated = [...portals, newPortal];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+    return newPortal;
   },
+  async updateProgress(id: string, progress: Partial<PortalProgress>): Promise<void> {
+    const portals = await this.list() as Portal[];
 
-  updateProgress: (id: string, patch: Partial<PortalProgress>) => {
-    const all = read();
-
-    const updated = all.map((portal) =>
+    const updated = portals.map((portal) =>
       portal.id === id
         ? {
             ...portal,
             progress: {
               ...portal.progress,
-              ...patch,
+              ...progress,
             },
           }
         : portal
     );
+    await Promise.resolve();
+    
 
-    write(updated);
-  },
-
-  remove: (id: string) => {
-    const all = read();
-    write(all.filter((portal) => portal.id !== id));
-  },
-
-  clear: () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(KEY);
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   },
 };

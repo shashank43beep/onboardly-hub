@@ -1,114 +1,160 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "@tanstack/react-router";
-import { SiteLayout } from "@/components/SiteLayout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { createFileRoute } from "@tanstack/react-router";
+import React, { useState } from "react";
 import { portalStore } from "@/lib/storage";
-import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/dashboard/new")({
-  head: () => ({ meta: [{ title: "Create portal — Onboardly" }] }),
-  component: NewPortal,
+  component: NewPortalPage,
 });
 
-function NewPortal() {
-  const navigate = useNavigate();
+function NewPortalPage() {
   const [form, setForm] = useState({
     portalName: "",
     clientName: "",
-    welcomeMessage: "Welcome aboard! We're excited to start working with you.",
+    welcomeMessage: "",
     brandLogo: "",
     paymentLink: "",
     meetingLink: "",
     webhookUrl: "",
   });
-  const [submitting, setSubmitting] = useState(false);
 
-  function update<K extends keyof typeof form>(k: K, v: string) {
-    setForm((f) => ({ ...f, [k]: v }));
+  function update(field: string, value: string) {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
-    try {
-      console.log("Creating portal with data:", form);
-      const portal = await portalStore.create(form);
-      if (portal) {
-        toast.success("Portal created");
-        setTimeout(() => navigate({ to: "/portal/$id", params: { id: portal.id } }), 400);
-      } else {
-        throw new Error("Failed to create portal in database");
-      }
-    } catch (err) {
-      console.error("Portal creation error:", err);
-      toast.error("Could not create portal. Please check your database connection.");
-      setSubmitting(false);
-    }
+
+    portalStore.create(form);
+    alert("Portal created successfully!");
   }
 
   return (
-    <SiteLayout>
-      <Toaster />
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <Button asChild variant="ghost" size="sm" className="mb-6">
-          <Link to="/dashboard"><ArrowLeft className="mr-1.5 h-4 w-4" /> Back to dashboard</Link>
-        </Button>
-        <h1 className="text-3xl font-semibold tracking-tight">Create onboarding portal</h1>
-        <p className="mt-2 text-muted-foreground">Customize what your client sees when they open the link.</p>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f8fafc",
+        padding: "40px 20px",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "700px",
+          margin: "0 auto",
+          background: "white",
+          padding: "32px",
+          borderRadius: "16px",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+        }}
+      >
+        <h1 style={{ fontSize: "32px", marginBottom: "8px" }}>
+          Create onboarding portal
+        </h1>
 
-        <Card className="mt-8 p-6 md:p-8" style={{ boxShadow: "var(--shadow-soft)" }}>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Portal name" required>
-                <Input required value={form.portalName} onChange={(e) => update("portalName", e.target.value)} placeholder="Acme Co. Onboarding" />
-              </Field>
-              <Field label="Client name" required>
-                <Input required value={form.clientName} onChange={(e) => update("clientName", e.target.value)} placeholder="Acme Co." />
-              </Field>
-            </div>
-            <Field label="Welcome message">
-              <Textarea rows={3} value={form.welcomeMessage} onChange={(e) => update("welcomeMessage", e.target.value)} />
-            </Field>
-            <Field label="Brand logo URL" hint="Optional. Paste a public image URL.">
-              <Input value={form.brandLogo} onChange={(e) => update("brandLogo", e.target.value)} placeholder="https://…/logo.png" />
-            </Field>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Payment link" hint="Stripe / PayPal checkout URL">
-                <Input value={form.paymentLink} onChange={(e) => update("paymentLink", e.target.value)} placeholder="https://buy.stripe.com/…" />
-              </Field>
-              <Field label="Meeting booking link" hint="Calendly / Cal.com URL">
-                <Input value={form.meetingLink} onChange={(e) => update("meetingLink", e.target.value)} placeholder="https://calendly.com/…" />
-              </Field>
-            </div>
-            <Field label="n8n webhook URL" hint="Optional. Form submissions will POST here.">
-              <Input value={form.webhookUrl} onChange={(e) => update("webhookUrl", e.target.value)} placeholder="https://n8n.yourdomain.com/webhook/…" />
-            </Field>
-            <div className="flex justify-end gap-3 border-t border-border/60 pt-5">
-              <Button type="button" variant="outline" onClick={() => navigate({ to: "/dashboard" })}>Cancel</Button>
-              <Button type="submit" disabled={submitting} style={{ background: "var(--gradient-hero)" }}>
-                {submitting ? "Creating…" : "Create portal"}
-              </Button>
-            </div>
-          </form>
-        </Card>
+        <p style={{ color: "#64748b", marginBottom: "30px" }}>
+          Customize what your client sees when they open the onboarding link.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <Field
+            label="Portal Name"
+            value={form.portalName}
+            onChange={(v) => update("portalName", v)}
+          />
+
+          <Field
+            label="Client Name"
+            value={form.clientName}
+            onChange={(v) => update("clientName", v)}
+          />
+
+          <Field
+            label="Welcome Message"
+            value={form.welcomeMessage}
+            onChange={(v) => update("welcomeMessage", v)}
+          />
+
+          <Field
+            label="Brand Logo URL"
+            value={form.brandLogo}
+            onChange={(v) => update("brandLogo", v)}
+          />
+
+          <Field
+            label="Payment Link"
+            value={form.paymentLink}
+            onChange={(v) => update("paymentLink", v)}
+          />
+
+          <Field
+            label="Meeting Link"
+            value={form.meetingLink}
+            onChange={(v) => update("meetingLink", v)}
+          />
+
+          <Field
+            label="Webhook URL"
+            value={form.webhookUrl}
+            onChange={(v) => update("webhookUrl", v)}
+          />
+
+          <button
+            type="submit"
+            style={{
+              marginTop: "20px",
+              width: "100%",
+              padding: "14px",
+              border: "none",
+              borderRadius: "10px",
+              background: "#2563eb",
+              color: "white",
+              fontSize: "16px",
+              cursor: "pointer",
+            }}
+          >
+            Create Portal
+          </button>
+        </form>
       </div>
-    </SiteLayout>
+    </div>
   );
 }
 
-function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
-    <div className="space-y-1.5">
-      <Label>{label}{required && <span className="text-destructive"> *</span>}</Label>
-      {children}
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    <div style={{ marginBottom: "18px" }}>
+      <label
+        style={{
+          display: "block",
+          marginBottom: "8px",
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </label>
+
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          width: "100%",
+          padding: "12px",
+          borderRadius: "8px",
+          border: "1px solid #cbd5e1",
+          fontSize: "15px",
+        }}
+      />
     </div>
   );
 }
