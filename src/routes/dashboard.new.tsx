@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import React, { useState } from "react";
 import { portalStore } from "@/lib/storage";
 
@@ -7,6 +7,7 @@ export const Route = createFileRoute("/dashboard/new")({
 });
 
 function NewPortalPage() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     portalName: "",
     clientName: "",
@@ -24,11 +25,14 @@ function NewPortalPage() {
     }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    portalStore.create(form);
-    alert("Portal created successfully!");
+    const portal = await portalStore.create(form);
+    if (portal) {
+      alert("Portal created successfully!");
+      navigate({ to: "/dashboard" });
+    }
   }
 
   return (
