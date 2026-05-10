@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { portalStore } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
 
-export const Route = createFileRoute("/dashboard/new")({
+export const Route = createFileRoute("/dashboard/new/")({
   component: NewPortalPage,
 });
 

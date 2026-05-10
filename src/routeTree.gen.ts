@@ -17,7 +17,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalIdRouteImport } from './routes/portal.$id'
-import { Route as DashboardNewRouteImport } from './routes/dashboard.new'
+import { Route as DashboardNewIndexRouteImport } from './routes/dashboard.new.index'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -59,9 +59,9 @@ const PortalIdRoute = PortalIdRouteImport.update({
   path: '/portal/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardNewRoute = DashboardNewRouteImport.update({
-  id: '/new',
-  path: '/new',
+const DashboardNewIndexRoute = DashboardNewIndexRouteImport.update({
+  id: '/new/',
+  path: '/new/',
   getParentRoute: () => DashboardRoute,
 } as any)
 
@@ -73,8 +73,8 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/dashboard/new': typeof DashboardNewRoute
   '/portal/$id': typeof PortalIdRoute
+  '/dashboard/new/': typeof DashboardNewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,8 +84,8 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/dashboard/new': typeof DashboardNewRoute
   '/portal/$id': typeof PortalIdRoute
+  '/dashboard/new': typeof DashboardNewIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,8 +96,8 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/dashboard/new': typeof DashboardNewRoute
   '/portal/$id': typeof PortalIdRoute
+  '/dashboard/new/': typeof DashboardNewIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -109,8 +109,8 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
-    | '/dashboard/new'
     | '/portal/$id'
+    | '/dashboard/new/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -120,8 +120,8 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
-    | '/dashboard/new'
     | '/portal/$id'
+    | '/dashboard/new'
   id:
     | '__root__'
     | '/'
@@ -131,8 +131,8 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
-    | '/dashboard/new'
     | '/portal/$id'
+    | '/dashboard/new/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -204,22 +204,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/new': {
-      id: '/dashboard/new'
+    '/dashboard/new/': {
+      id: '/dashboard/new/'
       path: '/new'
-      fullPath: '/dashboard/new'
-      preLoaderRoute: typeof DashboardNewRouteImport
+      fullPath: '/dashboard/new/'
+      preLoaderRoute: typeof DashboardNewIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
   }
 }
 
 interface DashboardRouteChildren {
-  DashboardNewRoute: typeof DashboardNewRoute
+  DashboardNewIndexRoute: typeof DashboardNewIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardNewRoute: DashboardNewRoute,
+  DashboardNewIndexRoute: DashboardNewIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
