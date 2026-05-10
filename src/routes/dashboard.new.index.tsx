@@ -8,55 +8,70 @@ export const Route = createFileRoute("/dashboard/new/")({
 });
 
 function NewPortalPage() {
-  const [portalName, setPortalName] = useState("");
-  const [clientName, setClientName] = useState("");
+  const [form, setForm] = useState({
+    portalName: "",
+    clientName: "",
+    welcomeMessage: "",
+    paymentLink: "",
+    meetingLink: "",
+    webhookUrl: "",
+    brandLogo: "",
+  });
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function checkUser() {
-      // getSession() reads from localStorage — no network call, works reliably on Vercel
-      const { data: { session }, error } = await supabase.auth.getSession();
-      console.log("Session check:", session, error);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session) {
         window.location.href = "/login";
       }
     }
+
     checkUser();
   }, []);
+
+  function updateField(key: string, value: string) {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (!portalName || !clientName) {
-      setError("Please fill all required fields");
+    if (!form.portalName || !form.clientName) {
+      setError("Portal name and client name are required");
       return;
     }
 
     setLoading(true);
-    console.log("Creating portal...");
 
     try {
       const portal = await portalStore.create({
-        portalName,
-        clientName,
-        welcomeMessage: "Welcome aboard!",
-        brandLogo: "",
-        paymentLink: "",
-        meetingLink: "",
-        webhookUrl: "",
+        portalName: form.portalName,
+        clientName: form.clientName,
+        welcomeMessage:
+          form.welcomeMessage || "Welcome aboard! Excited to work with you.",
+        paymentLink: form.paymentLink,
+        meetingLink: form.meetingLink,
+        webhookUrl: form.webhookUrl,
+        brandLogo: form.brandLogo,
       });
 
-      console.log("Portal created:", portal);
-
       if (!portal?.id) {
-        throw new Error("Portal not created");
+        throw new Error("Portal creation failed");
       }
 
       window.location.href = "/dashboard";
     } catch (err) {
-      console.error("Create portal error:", err);
+      console.error(err);
       setError("Failed to create portal");
     } finally {
       setLoading(false);
@@ -64,34 +79,98 @@ function NewPortalPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", padding: "40px", background: "#f8fafc", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ fontSize: "30px", marginBottom: "24px" }}>Create Portal</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "40px",
+        background: "#f8fafc",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <h1 style={{ fontSize: "30px", marginBottom: "24px" }}>
+        Create Client Portal
+      </h1>
 
-      {error && <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>}
+      {error && (
+        <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>
+      )}
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "20px" }}>
-          <input
-            type="text"
-            placeholder="Portal Name"
-            value={portalName}
-            onChange={(e) => setPortalName(e.target.value)}
-            style={{ width: "320px", padding: "12px", borderRadius: "8px", border: "1px solid #ccc" }}
-          />
-        </div>
-        <div style={{ marginBottom: "20px" }}>
-          <input
-            type="text"
-            placeholder="Client Name"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            style={{ width: "320px", padding: "12px", borderRadius: "8px", border: "1px solid #ccc" }}
-          />
-        </div>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          maxWidth: "420px",
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Portal Name"
+          value={form.portalName}
+          onChange={(e) => updateField("portalName", e.target.value)}
+          style={inputStyle}
+        />
+
+        <input
+          type="text"
+          placeholder="Client Name"
+          value={form.clientName}
+          onChange={(e) => updateField("clientName", e.target.value)}
+          style={inputStyle}
+        />
+
+        <textarea
+          placeholder="Welcome Message"
+          value={form.welcomeMessage}
+          onChange={(e) => updateField("welcomeMessage", e.target.value)}
+          style={{ ...inputStyle, minHeight: "90px" }}
+        />
+
+        <input
+          type="url"
+          placeholder="Payment Link"
+          value={form.paymentLink}
+          onChange={(e) => updateField("paymentLink", e.target.value)}
+          style={inputStyle}
+        />
+
+        <input
+          type="url"
+          placeholder="Meeting Link"
+          value={form.meetingLink}
+          onChange={(e) => updateField("meetingLink", e.target.value)}
+          style={inputStyle}
+        />
+
+        <input
+          type="url"
+          placeholder="Webhook URL"
+          value={form.webhookUrl}
+          onChange={(e) => updateField("webhookUrl", e.target.value)}
+          style={inputStyle}
+        />
+
+        <input
+          type="url"
+          placeholder="Brand Logo URL"
+          value={form.brandLogo}
+          onChange={(e) => updateField("brandLogo", e.target.value)}
+          style={inputStyle}
+        />
+
         <button
           type="submit"
           disabled={loading}
-          style={{ padding: "12px 18px", background: "#2563eb", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}
+          style={{
+            padding: "14px",
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
         >
           {loading ? "Creating..." : "Create Portal"}
         </button>
@@ -99,3 +178,11 @@ function NewPortalPage() {
     </div>
   );
 }
+
+const inputStyle = {
+  width: "100%",
+  padding: "12px",
+  borderRadius: "8px",
+  border: "1px solid #ccc",
+  fontSize: "14px",
+};

@@ -112,10 +112,22 @@ function ClientPortal() {
                   {portal.clientName.charAt(0)}
                 </div>
               )}
-              <div>
-                <h2 className="font-semibold leading-none">{portal.portalName}</h2>
-                <p className="mt-1 text-xs text-muted-foreground">{portal.clientName}</p>
-              </div>
+             <div className="w-full">
+  <h2 className="font-semibold leading-none">{portal.portalName}</h2>
+  <p className="mt-1 text-xs text-muted-foreground">{portal.clientName}</p>
+
+  <Button
+    variant="outline"
+    size="sm"
+    className="mt-4 w-full"
+    onClick={() => {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Portal link copied");
+    }}
+  >
+    Copy Portal Link
+  </Button>
+</div>
             </div>
 
             <nav className="space-y-1">
