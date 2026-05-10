@@ -87,6 +87,18 @@ function DashboardPage() {
     await loadPortals();
   }
 
+  function getProgress(portal: any) {
+    const values = Object.values(portal.progress || {});
+    const completed = values.filter(Boolean).length;
+    return Math.round((completed / 4) * 100);
+  }
+
+  function getStatus(progress: number) {
+    if (progress === 0) return "Not started";
+    if (progress === 100) return "Completed";
+    return "In progress";
+  }
+
   return (
     <div style={{ padding: 40 }}>
       <h1>Dashboard</h1>
@@ -109,51 +121,95 @@ function DashboardPage() {
       ) : portals.length === 0 ? (
         <p>No portals yet</p>
       ) : (
-        portals.map((portal) => (
-          <div
-            key={portal.id}
-            style={{
-              padding: 18,
-              background: "#fff",
-              marginBottom: 16,
-              borderRadius: 12,
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            <h3>{portal.portalName}</h3>
-            <p style={{ color: "#666" }}>{portal.clientName}</p>
+        portals.map((portal) => {
+          const progress = getProgress(portal);
 
-            <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
-              <button
-                onClick={() => copyPortalLink(portal.id)}
-                style={buttonGray}
-              >
-                Copy Portal Link
-              </button>
+          return (
+            <div
+              key={portal.id}
+              style={{
+                padding: 18,
+                background: "#fff",
+                marginBottom: 16,
+                borderRadius: 12,
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              <h3>{portal.portalName}</h3>
+              <p style={{ color: "#666", marginBottom: 12 }}>
+                {portal.clientName}
+              </p>
 
-              <button
-                onClick={() => window.open(`/portal/${portal.id}`, "_blank")}
-                style={buttonBlue}
-              >
-                Open Client Portal
-              </button>
+              <div style={{ marginBottom: 12 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 6,
+                    fontSize: 14,
+                  }}
+                >
+                  <span>{getStatus(progress)}</span>
+                  <span>{progress}%</span>
+                </div>
 
-              <button
-                onClick={() => editPortal(portal)}
-                style={buttonGray}
-              >
-                Edit
-              </button>
+                <div
+                  style={{
+                    height: 8,
+                    background: "#e5e7eb",
+                    borderRadius: 999,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${progress}%`,
+                      height: "100%",
+                      background: "#2563eb",
+                    }}
+                  />
+                </div>
+              </div>
 
-              <button
-                onClick={() => deletePortal(portal.id)}
-                style={buttonRed}
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  marginTop: 14,
+                  flexWrap: "wrap",
+                }}
               >
-                Delete
-              </button>
+                <button
+                  onClick={() => copyPortalLink(portal.id)}
+                  style={buttonGray}
+                >
+                  Copy Portal Link
+                </button>
+
+                <button
+                  onClick={() => window.open(`/portal/${portal.id}`, "_blank")}
+                  style={buttonBlue}
+                >
+                  Open Client Portal
+                </button>
+
+                <button
+                  onClick={() => editPortal(portal)}
+                  style={buttonGray}
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => deletePortal(portal.id)}
+                  style={buttonRed}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
 
       <Outlet />
