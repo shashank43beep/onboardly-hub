@@ -12,6 +12,11 @@ function DashboardPage() {
   const [portals, setPortals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  async function loadPortals() {
+    const data = await portalStore.list();
+    setPortals(data || []);
+  }
+
   useEffect(() => {
     async function initialize() {
       try {
@@ -24,8 +29,7 @@ function DashboardPage() {
           return;
         }
 
-        const data = await portalStore.list();
-        setPortals(data || []);
+        await loadPortals();
       } catch (error) {
         console.error(error);
       } finally {
@@ -45,6 +49,42 @@ function DashboardPage() {
     const url = `${window.location.origin}/portal/${id}`;
     navigator.clipboard.writeText(url);
     toast.success("Portal link copied");
+  }
+
+  async function deletePortal(id: string) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this portal?"
+    );
+
+    if (!confirmed) return;
+
+    await portalStore.delete(id);
+    toast.success("Portal deleted");
+    await loadPortals();
+  }
+
+  async function editPortal(portal: any) {
+    const newPortalName = window.prompt(
+      "Edit portal name",
+      portal.portalName
+    );
+
+    if (!newPortalName) return;
+
+    const newClientName = window.prompt(
+      "Edit client name",
+      portal.clientName
+    );
+
+    if (!newClientName) return;
+
+    await portalStore.update(portal.id, {
+      portalName: newPortalName,
+      clientName: newClientName,
+    });
+
+    toast.success("Portal updated");
+    await loadPortals();
   }
 
   return (
@@ -83,7 +123,7 @@ function DashboardPage() {
             <h3>{portal.portalName}</h3>
             <p style={{ color: "#666" }}>{portal.clientName}</p>
 
-            <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+            <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
               <button
                 onClick={() => copyPortalLink(portal.id)}
                 style={buttonGray}
@@ -92,12 +132,24 @@ function DashboardPage() {
               </button>
 
               <button
-                onClick={() =>
-                  window.open(`/portal/${portal.id}`, "_blank")
-                }
+                onClick={() => window.open(`/portal/${portal.id}`, "_blank")}
                 style={buttonBlue}
               >
                 Open Client Portal
+              </button>
+
+              <button
+                onClick={() => editPortal(portal)}
+                style={buttonGray}
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() => deletePortal(portal.id)}
+                style={buttonRed}
+              >
+                Delete
               </button>
             </div>
           </div>

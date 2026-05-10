@@ -34,7 +34,9 @@ export const portalStore = {
     return (await this.list()).find((portal) => portal.id === id) || null;
   },
 
-  async create(data: Omit<Portal, "id" | "createdAt" | "progress">): Promise<Portal> {
+  async create(
+    data: Omit<Portal, "id" | "createdAt" | "progress">
+  ): Promise<Portal> {
     const portals = await this.list();
 
     const newPortal: Portal = {
@@ -54,8 +56,33 @@ export const portalStore = {
 
     return newPortal;
   },
-  async updateProgress(id: string, progress: Partial<PortalProgress>): Promise<void> {
-    const portals = await this.list() as Portal[];
+
+  async update(
+    id: string,
+    updates: Partial<Omit<Portal, "id" | "createdAt" | "progress">>
+  ): Promise<void> {
+    const portals = await this.list();
+
+    const updated = portals.map((portal) =>
+      portal.id === id ? { ...portal, ...updates } : portal
+    );
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  },
+
+  async delete(id: string): Promise<void> {
+    const portals = await this.list();
+
+    const updated = portals.filter((portal) => portal.id !== id);
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  },
+
+  async updateProgress(
+    id: string,
+    progress: Partial<PortalProgress>
+  ): Promise<void> {
+    const portals = await this.list();
 
     const updated = portals.map((portal) =>
       portal.id === id
@@ -68,8 +95,6 @@ export const portalStore = {
           }
         : portal
     );
-    await Promise.resolve();
-    
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   },
