@@ -101,6 +101,15 @@ Thanks`
   await loadPortals();
 }
 
+  async function restorePortal(id: string) {
+  await portalStore.update(id, {
+    archived: false,
+  });
+
+  toast.success("Portal restored");
+  await loadPortals();
+}
+
   async function editPortal(portal: any) {
     const newPortalName = window.prompt(
       "Edit portal name",
@@ -270,6 +279,13 @@ Thanks`
         >
           <h3>{portal.portalName}</h3>
           <p style={{ color: "#666" }}>{portal.clientName}</p>
+
+        <button
+          onClick={() => restorePortal(portal.id)}
+          style={{ ...buttonBlue, marginTop: 12 }}
+        >
+          Restore
+      </button>
         </div>
       ))}
   </>
