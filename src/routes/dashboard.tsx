@@ -11,6 +11,20 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardPage() {
   const [portals, setPortals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  <><div style={{ display: "flex", gap: 12, marginBottom: 30 }}></div><input
+    type="text"
+    placeholder="Search by portal or client..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    style={{
+      width: "100%",
+      maxWidth: 420,
+      padding: "12px",
+      borderRadius: 8,
+      border: "1px solid #d1d5db",
+      marginBottom: 24,
+    }} /></>
 
   async function loadPortals() {
     const data = await portalStore.list();
@@ -171,7 +185,14 @@ Thanks`
 ) : (
   <>
     {portals
-      .filter((portal) => !portal.archived)
+      .filter(
+  (portal) =>
+    !portal.archived &&
+    (
+      portal.portalName.toLowerCase().includes(search.toLowerCase()) ||
+      portal.clientName.toLowerCase().includes(search.toLowerCase())
+    )
+)
       .map((portal) => {
         const progress = getProgress(portal);
 
@@ -267,7 +288,14 @@ Thanks`
     <h2 style={{ marginTop: 40 }}>Archived Portals</h2>
 
     {portals
-      .filter((portal) => portal.archived)
+      .filter(
+  (portal) =>
+    portal.archived &&
+    (
+      portal.portalName.toLowerCase().includes(search.toLowerCase()) ||
+      portal.clientName.toLowerCase().includes(search.toLowerCase())
+    )
+)
       .map((portal) => (
         <div
           key={portal.id}
