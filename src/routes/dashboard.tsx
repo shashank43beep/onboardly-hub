@@ -190,6 +190,9 @@ Thanks`
             <p style={{ color: "#666", marginBottom: 12 }}>
               {portal.clientName}
             </p>
+            <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 12 }}>
+  Created: {new Date(portal.createdAt).toLocaleDateString()}
+</p>
 
             <div style={{ marginBottom: 12 }}>
               <div
@@ -279,6 +282,9 @@ Thanks`
         >
           <h3>{portal.portalName}</h3>
           <p style={{ color: "#666" }}>{portal.clientName}</p>
+          <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 6 }}>
+  Created: {new Date(portal.createdAt).toLocaleDateString()}
+</p>
 
         <button
           onClick={() => restorePortal(portal.id)}
