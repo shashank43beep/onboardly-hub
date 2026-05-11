@@ -11,6 +11,7 @@ function NewPortalPage() {
   const [form, setForm] = useState({
     portalName: "",
     clientName: "",
+    clientEmail: "",
     welcomeMessage: "",
     paymentLink: "",
     meetingLink: "",
@@ -57,6 +58,7 @@ function NewPortalPage() {
       const portal = await portalStore.create({
         portalName: form.portalName,
         clientName: form.clientName,
+        clientEmail: form.clientEmail,
         welcomeMessage:
           form.welcomeMessage || "Welcome aboard! Excited to work with you.",
         paymentLink: form.paymentLink,
@@ -110,6 +112,14 @@ function NewPortalPage() {
           value={form.portalName}
           onChange={(e) => updateField("portalName", e.target.value)}
           style={inputStyle}
+        />
+
+        <input
+        type="email"
+        placeholder="Client Email"
+        value={form.clientEmail}
+        onChange={(e) => updateField("clientEmail", e.target.value)}
+        style={inputStyle}
         />
 
         <input

@@ -9,6 +9,7 @@ export type Portal = {
   id: string;
   portalName: string;
   clientName: string;
+  clientEmail?: string;
   welcomeMessage: string;
   brandLogo: string;
   paymentLink: string;

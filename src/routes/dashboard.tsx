@@ -46,10 +46,40 @@ function DashboardPage() {
   }
 
   function copyPortalLink(id: string) {
-    const url = `${window.location.origin}/portal/${id}`;
-    navigator.clipboard.writeText(url);
-    toast.success("Portal link copied");
+  const url = `${window.location.origin}/portal/${id}`;
+  navigator.clipboard.writeText(url);
+  toast.success("Portal link copied");
+}
+
+function sendInvite(portal: any) {
+  if (!portal.clientEmail) {
+    toast.error("No client email found");
+    return;
   }
+
+  const link = `${window.location.origin}/portal/${portal.id}`;
+
+  const subject = encodeURIComponent(
+    `Your onboarding portal - ${portal.portalName}`
+  );
+
+  const body = encodeURIComponent(
+    `Hi ${portal.clientName},
+
+Welcome onboard.
+
+Please complete your onboarding here:
+${link}
+
+Thanks`
+  );
+
+  window.open(
+    `mailto:${portal.clientEmail}?subject=${subject}&body=${body}`
+  );
+
+  toast.success("Email draft opened");
+}
 
   async function deletePortal(id: string) {
     const confirmed = window.confirm(
@@ -184,6 +214,13 @@ function DashboardPage() {
                   style={buttonGray}
                 >
                   Copy Portal Link
+                </button>
+
+                <button
+                  onClick={() => sendInvite(portal)}
+                  style={buttonBlue}
+                >
+                  Send Invite
                 </button>
 
                 <button
