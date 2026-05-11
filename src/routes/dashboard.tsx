@@ -12,19 +12,13 @@ function DashboardPage() {
   const [portals, setPortals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  <><div style={{ display: "flex", gap: 12, marginBottom: 30 }}></div><input
-    type="text"
-    placeholder="Search by portal or client..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    style={{
-      width: "100%",
-      maxWidth: 420,
-      padding: "12px",
-      borderRadius: 8,
-      border: "1px solid #d1d5db",
-      marginBottom: 24,
-    }} /></>
+
+  const [editingPortal, setEditingPortal] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    portalName: "",
+    clientName: "",
+    notes: "",
+  });
 
   async function loadPortals() {
     const data = await portalStore.list();
@@ -60,40 +54,38 @@ function DashboardPage() {
   }
 
   function copyPortalLink(id: string) {
-  const url = `${window.location.origin}/portal/${id}`;
-  navigator.clipboard.writeText(url);
-  toast.success("Portal link copied");
-}
-
-function sendInvite(portal: any) {
-  if (!portal.clientEmail) {
-    toast.error("No client email found");
-    return;
+    const url = `${window.location.origin}/portal/${id}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Portal link copied");
   }
 
-  const link = `${window.location.origin}/portal/${portal.id}`;
+  function sendInvite(portal: any) {
+    if (!portal.clientEmail) {
+      toast.error("No client email found");
+      return;
+    }
 
-  const subject = encodeURIComponent(
-    `Your onboarding portal - ${portal.portalName}`
-  );
+    const link = `${window.location.origin}/portal/${portal.id}`;
 
-  const body = encodeURIComponent(
-    `Hi ${portal.clientName},
+    const subject = encodeURIComponent(
+      `Your onboarding portal - ${portal.portalName}`
+    );
+
+    const body = encodeURIComponent(`Hi ${portal.clientName},
 
 Welcome onboard.
 
 Please complete your onboarding here:
 ${link}
 
-Thanks`
-  );
+Thanks`);
 
-  window.open(
-    `mailto:${portal.clientEmail}?subject=${subject}&body=${body}`
-  );
+    window.open(
+      `mailto:${portal.clientEmail}?subject=${subject}&body=${body}`
+    );
 
-  toast.success("Email draft opened");
-}
+    toast.success("Email draft opened");
+  }
 
   async function deletePortal(id: string) {
     const confirmed = window.confirm(
@@ -106,45 +98,46 @@ Thanks`
     toast.success("Portal deleted");
     await loadPortals();
   }
-  async function archivePortal(id: string) {
-  await portalStore.update(id, {
-    archived: true,
-  });
 
-  toast.success("Portal archived");
-  await loadPortals();
-}
+  async function archivePortal(id: string) {
+    await portalStore.update(id, {
+      archived: true,
+    });
+
+    toast.success("Portal archived");
+    await loadPortals();
+  }
 
   async function restorePortal(id: string) {
-  await portalStore.update(id, {
-    archived: false,
-  });
+    await portalStore.update(id, {
+      archived: false,
+    });
 
-  toast.success("Portal restored");
-  await loadPortals();
-}
+    toast.success("Portal restored");
+    await loadPortals();
+  }
 
-  async function editPortal(portal: any) {
-    const newPortalName = window.prompt(
-      "Edit portal name",
-      portal.portalName
-    );
+  function editPortal(portal: any) {
+    setEditingPortal(portal);
 
-    if (!newPortalName) return;
+    setEditForm({
+      portalName: portal.portalName || "",
+      clientName: portal.clientName || "",
+      notes: portal.notes || "",
+    });
+  }
 
-    const newClientName = window.prompt(
-      "Edit client name",
-      portal.clientName
-    );
+  async function saveEditPortal() {
+    if (!editingPortal) return;
 
-    if (!newClientName) return;
-
-    await portalStore.update(portal.id, {
-      portalName: newPortalName,
-      clientName: newClientName,
+    await portalStore.update(editingPortal.id, {
+      portalName: editForm.portalName,
+      clientName: editForm.clientName,
+      notes: editForm.notes,
     });
 
     toast.success("Portal updated");
+    setEditingPortal(null);
     await loadPortals();
   }
 
@@ -177,153 +170,309 @@ Thanks`
         </button>
       </div>
 
-      {loading ? (
-    
-  <p>Loading...</p>
-) : portals.length === 0 ? (
-  <p>No portals yet</p>
-) : (
-  <>
-    {portals
-      .filter(
-  (portal) =>
-    !portal.archived &&
-    (
-      portal.portalName.toLowerCase().includes(search.toLowerCase()) ||
-      portal.clientName.toLowerCase().includes(search.toLowerCase())
-    )
-)
-      .map((portal) => {
-        const progress = getProgress(portal);
+      <input
+        type="text"
+        placeholder="Search by portal or client..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          padding: "12px",
+          borderRadius: 8,
+          border: "1px solid #d1d5db",
+          marginBottom: 24,
+        }}
+      />
 
-        return (
+      {loading ? (
+        <p>Loading...</p>
+      ) : portals.length === 0 ? (
+        <p>No portals yet</p>
+      ) : (
+        <>
+          {portals
+            .filter(
+              (portal) =>
+                !portal.archived &&
+                (portal.portalName
+                  .toLowerCase()
+                  .includes(search.toLowerCase()) ||
+                  portal.clientName
+                    .toLowerCase()
+                    .includes(search.toLowerCase()))
+            )
+            .map((portal) => {
+              const progress = getProgress(portal);
+
+              return (
+                <div
+                  key={portal.id}
+                  style={{
+                    padding: 18,
+                    background: "#fff",
+                    marginBottom: 16,
+                    borderRadius: 12,
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
+                  <h3>{portal.portalName}</h3>
+                  <p style={{ color: "#666", marginBottom: 12 }}>
+                    {portal.clientName}
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: 13,
+                      color: "#9ca3af",
+                      marginBottom: 12,
+                    }}
+                  >
+                    Created:{" "}
+                    {new Date(portal.createdAt).toLocaleDateString()}
+                  </p>
+
+                  {portal.notes && (
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: "#374151",
+                        marginBottom: 12,
+                      }}
+                    >
+                      Notes: {portal.notes}
+                    </p>
+                  )}
+
+                  <div style={{ marginBottom: 12 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: 6,
+                        fontSize: 14,
+                      }}
+                    >
+                      <span>{getStatus(progress)}</span>
+                      <span>{progress}%</span>
+                    </div>
+
+                    <div
+                      style={{
+                        height: 8,
+                        background: "#e5e7eb",
+                        borderRadius: 999,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${progress}%`,
+                          height: "100%",
+                          background: "#2563eb",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      marginTop: 14,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <button
+                      onClick={() => copyPortalLink(portal.id)}
+                      style={buttonGray}
+                    >
+                      Copy Portal Link
+                    </button>
+
+                    <button
+                      onClick={() => sendInvite(portal)}
+                      style={buttonBlue}
+                    >
+                      Send Invite
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        window.open(`/portal/${portal.id}`, "_blank")
+                      }
+                      style={buttonBlue}
+                    >
+                      Open Client Portal
+                    </button>
+
+                    <button
+                      onClick={() => editPortal(portal)}
+                      style={buttonGray}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => deletePortal(portal.id)}
+                      style={buttonRed}
+                    >
+                      Delete
+                    </button>
+
+                    <button
+                      onClick={() => archivePortal(portal.id)}
+                      style={buttonGray}
+                    >
+                      Archive
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+
+          <h2 style={{ marginTop: 40 }}>Archived Portals</h2>
+
+          {portals
+            .filter(
+              (portal) =>
+                portal.archived &&
+                (portal.portalName
+                  .toLowerCase()
+                  .includes(search.toLowerCase()) ||
+                  portal.clientName
+                    .toLowerCase()
+                    .includes(search.toLowerCase()))
+            )
+            .map((portal) => (
+              <div
+                key={portal.id}
+                style={{
+                  padding: 18,
+                  background: "#f9fafb",
+                  marginBottom: 16,
+                  borderRadius: 12,
+                  border: "1px solid #e5e7eb",
+                  opacity: 0.8,
+                }}
+              >
+                <h3>{portal.portalName}</h3>
+                <p style={{ color: "#666" }}>{portal.clientName}</p>
+
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "#9ca3af",
+                    marginTop: 6,
+                  }}
+                >
+                  Created:{" "}
+                  {new Date(portal.createdAt).toLocaleDateString()}
+                </p>
+
+                <button
+                  onClick={() => restorePortal(portal.id)}
+                  style={{ ...buttonBlue, marginTop: 12 }}
+                >
+                  Restore
+                </button>
+              </div>
+            ))}
+        </>
+      )}
+
+      {editingPortal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 999,
+          }}
+        >
           <div
-            key={portal.id}
             style={{
-              padding: 18,
-              background: "#fff",
-              marginBottom: 16,
+              background: "white",
+              padding: 24,
               borderRadius: 12,
-              border: "1px solid #e5e7eb",
+              width: 420,
             }}
           >
-            <h3>{portal.portalName}</h3>
-            <p style={{ color: "#666", marginBottom: 12 }}>
-              {portal.clientName}
-            </p>
-            <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 12 }}>
-  Created: {new Date(portal.createdAt).toLocaleDateString()}
-</p>
+            <h2 style={{ marginBottom: 16 }}>Edit Portal</h2>
 
-            <div style={{ marginBottom: 12 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 6,
-                  fontSize: 14,
-                }}
-              >
-                <span>{getStatus(progress)}</span>
-                <span>{progress}%</span>
-              </div>
-
-              <div
-                style={{
-                  height: 8,
-                  background: "#e5e7eb",
-                  borderRadius: 999,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${progress}%`,
-                    height: "100%",
-                    background: "#2563eb",
-                  }}
-                />
-              </div>
-            </div>
-
-            <div
+            <input
+              value={editForm.portalName}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  portalName: e.target.value,
+                })
+              }
+              placeholder="Portal name"
               style={{
-                display: "flex",
-                gap: 10,
-                marginTop: 14,
-                flexWrap: "wrap",
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                marginBottom: 12,
               }}
-            >
-              <button onClick={() => copyPortalLink(portal.id)} style={buttonGray}>
-                Copy Portal Link
-              </button>
+            />
 
-              <button onClick={() => sendInvite(portal)} style={buttonBlue}>
-                Send Invite
+            <input
+              value={editForm.clientName}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  clientName: e.target.value,
+                })
+              }
+              placeholder="Client name"
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                marginBottom: 12,
+              }}
+            />
+
+            <textarea
+              value={editForm.notes}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  notes: e.target.value,
+                })
+              }
+              placeholder="Internal notes"
+              style={{
+                width: "100%",
+                minHeight: 100,
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                marginBottom: 16,
+              }}
+            />
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={saveEditPortal} style={buttonBlue}>
+                Save
               </button>
 
               <button
-                onClick={() => window.open(`/portal/${portal.id}`, "_blank")}
-                style={buttonBlue}
+                onClick={() => setEditingPortal(null)}
+                style={buttonRed}
               >
-                Open Client Portal
-              </button>
-
-              <button onClick={() => editPortal(portal)} style={buttonGray}>
-                Edit
-              </button>
-
-              <button onClick={() => deletePortal(portal.id)} style={buttonRed}>
-                Delete
-              </button>
-
-              <button onClick={() => archivePortal(portal.id)} style={buttonGray}>
-                Archive
+                Cancel
               </button>
             </div>
           </div>
-        );
-      })}
-
-    <h2 style={{ marginTop: 40 }}>Archived Portals</h2>
-
-    {portals
-      .filter(
-  (portal) =>
-    portal.archived &&
-    (
-      portal.portalName.toLowerCase().includes(search.toLowerCase()) ||
-      portal.clientName.toLowerCase().includes(search.toLowerCase())
-    )
-)
-      .map((portal) => (
-        <div
-          key={portal.id}
-          style={{
-            padding: 18,
-            background: "#f9fafb",
-            marginBottom: 16,
-            borderRadius: 12,
-            border: "1px solid #e5e7eb",
-            opacity: 0.8,
-          }}
-        >
-          <h3>{portal.portalName}</h3>
-          <p style={{ color: "#666" }}>{portal.clientName}</p>
-          <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 6 }}>
-  Created: {new Date(portal.createdAt).toLocaleDateString()}
-</p>
-
-        <button
-          onClick={() => restorePortal(portal.id)}
-          style={{ ...buttonBlue, marginTop: 12 }}
-        >
-          Restore
-      </button>
         </div>
-      ))}
-  </>
-)}
+      )}
 
       <Outlet />
     </div>
