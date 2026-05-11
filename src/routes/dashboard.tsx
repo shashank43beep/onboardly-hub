@@ -92,6 +92,14 @@ Thanks`
     toast.success("Portal deleted");
     await loadPortals();
   }
+  async function archivePortal(id: string) {
+  await portalStore.update(id, {
+    archived: true,
+  });
+
+  toast.success("Portal archived");
+  await loadPortals();
+}
 
   async function editPortal(portal: any) {
     const newPortalName = window.prompt(
@@ -147,107 +155,125 @@ Thanks`
       </div>
 
       {loading ? (
-        <p>Loading...</p>
-      ) : portals.length === 0 ? (
-        <p>No portals yet</p>
-      ) : (
-        portals.map((portal) => {
-          const progress = getProgress(portal);
+    
+  <p>Loading...</p>
+) : portals.length === 0 ? (
+  <p>No portals yet</p>
+) : (
+  <>
+    {portals
+      .filter((portal) => !portal.archived)
+      .map((portal) => {
+        const progress = getProgress(portal);
 
-          return (
-            <div
-              key={portal.id}
-              style={{
-                padding: 18,
-                background: "#fff",
-                marginBottom: 16,
-                borderRadius: 12,
-                border: "1px solid #e5e7eb",
-              }}
-            >
-              <h3>{portal.portalName}</h3>
-              <p style={{ color: "#666", marginBottom: 12 }}>
-                {portal.clientName}
-              </p>
+        return (
+          <div
+            key={portal.id}
+            style={{
+              padding: 18,
+              background: "#fff",
+              marginBottom: 16,
+              borderRadius: 12,
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <h3>{portal.portalName}</h3>
+            <p style={{ color: "#666", marginBottom: 12 }}>
+              {portal.clientName}
+            </p>
 
-              <div style={{ marginBottom: 12 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: 6,
-                    fontSize: 14,
-                  }}
-                >
-                  <span>{getStatus(progress)}</span>
-                  <span>{progress}%</span>
-                </div>
-
-                <div
-                  style={{
-                    height: 8,
-                    background: "#e5e7eb",
-                    borderRadius: 999,
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${progress}%`,
-                      height: "100%",
-                      background: "#2563eb",
-                    }}
-                  />
-                </div>
+            <div style={{ marginBottom: 12 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: 6,
+                  fontSize: 14,
+                }}
+              >
+                <span>{getStatus(progress)}</span>
+                <span>{progress}%</span>
               </div>
 
               <div
                 style={{
-                  display: "flex",
-                  gap: 10,
-                  marginTop: 14,
-                  flexWrap: "wrap",
+                  height: 8,
+                  background: "#e5e7eb",
+                  borderRadius: 999,
+                  overflow: "hidden",
                 }}
               >
-                <button
-                  onClick={() => copyPortalLink(portal.id)}
-                  style={buttonGray}
-                >
-                  Copy Portal Link
-                </button>
-
-                <button
-                  onClick={() => sendInvite(portal)}
-                  style={buttonBlue}
-                >
-                  Send Invite
-                </button>
-
-                <button
-                  onClick={() => window.open(`/portal/${portal.id}`, "_blank")}
-                  style={buttonBlue}
-                >
-                  Open Client Portal
-                </button>
-
-                <button
-                  onClick={() => editPortal(portal)}
-                  style={buttonGray}
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => deletePortal(portal.id)}
-                  style={buttonRed}
-                >
-                  Delete
-                </button>
+                <div
+                  style={{
+                    width: `${progress}%`,
+                    height: "100%",
+                    background: "#2563eb",
+                  }}
+                />
               </div>
             </div>
-          );
-        })
-      )}
+
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                marginTop: 14,
+                flexWrap: "wrap",
+              }}
+            >
+              <button onClick={() => copyPortalLink(portal.id)} style={buttonGray}>
+                Copy Portal Link
+              </button>
+
+              <button onClick={() => sendInvite(portal)} style={buttonBlue}>
+                Send Invite
+              </button>
+
+              <button
+                onClick={() => window.open(`/portal/${portal.id}`, "_blank")}
+                style={buttonBlue}
+              >
+                Open Client Portal
+              </button>
+
+              <button onClick={() => editPortal(portal)} style={buttonGray}>
+                Edit
+              </button>
+
+              <button onClick={() => deletePortal(portal.id)} style={buttonRed}>
+                Delete
+              </button>
+
+              <button onClick={() => archivePortal(portal.id)} style={buttonGray}>
+                Archive
+              </button>
+            </div>
+          </div>
+        );
+      })}
+
+    <h2 style={{ marginTop: 40 }}>Archived Portals</h2>
+
+    {portals
+      .filter((portal) => portal.archived)
+      .map((portal) => (
+        <div
+          key={portal.id}
+          style={{
+            padding: 18,
+            background: "#f9fafb",
+            marginBottom: 16,
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            opacity: 0.8,
+          }}
+        >
+          <h3>{portal.portalName}</h3>
+          <p style={{ color: "#666" }}>{portal.clientName}</p>
+        </div>
+      ))}
+  </>
+)}
 
       <Outlet />
     </div>

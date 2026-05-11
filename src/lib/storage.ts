@@ -17,6 +17,7 @@ export type Portal = {
   webhookUrl?: string;
   createdAt: string;
   progress: PortalProgress;
+  archived?: boolean;
 };
 
 const STORAGE_KEY = "onboardly_portals";
@@ -49,7 +50,9 @@ export const portalStore = {
         filesUploaded: false,
         paymentCompleted: false,
         meetingBooked: false,
+      
       },
+      archived: false,
     };
 
     const updated = [...portals, newPortal];
