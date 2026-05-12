@@ -65,6 +65,7 @@ function NewPortalPage() {
         meetingLink: form.meetingLink,
         webhookUrl: form.webhookUrl,
         brandLogo: form.brandLogo,
+        archived: false,
       });
 
       if (!portal?.id) {

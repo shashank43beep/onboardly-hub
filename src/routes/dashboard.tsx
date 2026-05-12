@@ -193,15 +193,15 @@ Thanks`);
         <>
           {portals
             .filter(
-              (portal) =>
-                !portal.archived &&
-                (portal.portalName
-                  .toLowerCase()
-                  .includes(search.toLowerCase()) ||
-                  portal.clientName
-                    .toLowerCase()
-                    .includes(search.toLowerCase()))
-            )
+  (portal) =>
+    portal.archived !== true &&
+    (portal.portalName
+      .toLowerCase()
+      .includes(search.toLowerCase()) ||
+      portal.clientName
+        .toLowerCase()
+        .includes(search.toLowerCase()))
+)
             .map((portal) => {
               const progress = getProgress(portal);
 
@@ -307,6 +307,15 @@ Thanks`);
                     </button>
 
                     <button
+                      onClick={() =>
+                      window.location.assign(`/dashboard/submission/${portal.id}`)
+                    }
+                      style={buttonGray}
+                    >
+                      View Submission
+                    </button>
+
+                    <button
                       onClick={() => editPortal(portal)}
                       style={buttonGray}
                     >
@@ -330,20 +339,20 @@ Thanks`);
                 </div>
               );
             })}
-
+<Outlet />
           <h2 style={{ marginTop: 40 }}>Archived Portals</h2>
 
           {portals
-            .filter(
-              (portal) =>
-                portal.archived &&
-                (portal.portalName
-                  .toLowerCase()
-                  .includes(search.toLowerCase()) ||
-                  portal.clientName
-                    .toLowerCase()
-                    .includes(search.toLowerCase()))
-            )
+            .filter((portal) => portal.archived === true).filter(
+  (portal) =>
+    portal.archived &&
+    (portal.portalName
+      .toLowerCase()
+      .includes(search.toLowerCase()) ||
+      portal.clientName
+        .toLowerCase()
+        .includes(search.toLowerCase()))
+)
             .map((portal) => (
               <div
                 key={portal.id}
@@ -474,7 +483,6 @@ Thanks`);
         </div>
       )}
 
-      <Outlet />
     </div>
   );
 }

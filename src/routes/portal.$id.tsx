@@ -254,11 +254,25 @@ function FormStep({ portal, onDone }: { portal: Portal; onDone: () => void }) {
 
     try {
       // Upsert submission
-      const { error } = await supabase.from("submissions").upsert([{
+      const { data: insertedData, error } = await supabase
+  .from("submissions")
+  .upsert(
+    [
+      {
         portal_id: portal.id,
         client_name: portal.clientName,
         project_details: data,
-      }], { onConflict: 'portal_id' });
+      },
+    ],
+    { onConflict: "portal_id" }
+  )
+  .select();
+
+console.log("Submission result:", insertedData, error);
+
+if (error) {
+  throw error;
+}
 
       await postToWebhook(portal.webhookUrl, { type: "form_submission", portalId: portal.id, data });
 
