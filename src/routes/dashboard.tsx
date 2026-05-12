@@ -184,6 +184,44 @@ Thanks`);
           marginBottom: 24,
         }}
       />
+      <div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 16,
+    marginBottom: 30,
+  }}
+>
+  <div style={statCard}>
+    <p style={statLabel}>Total Portals</p>
+    <h2 style={statValue}>{portals.length}</h2>
+  </div>
+
+  <div style={statCard}>
+    <p style={statLabel}>Active Clients</p>
+    <h2 style={statValue}>
+      {portals.filter((portal) => portal.archived !== true).length}
+    </h2>
+  </div>
+
+  <div style={statCard}>
+    <p style={statLabel}>Completed</p>
+    <h2 style={statValue}>
+      {
+        portals.filter(
+          (portal) => getProgress(portal) === 100
+        ).length
+      }
+    </h2>
+  </div>
+
+  <div style={statCard}>
+    <p style={statLabel}>Archived</p>
+    <h2 style={statValue}>
+      {portals.filter((portal) => portal.archived === true).length}
+    </h2>
+  </div>
+</div>
 
       {loading ? (
         <p>Loading...</p>
@@ -512,4 +550,24 @@ const buttonGray = {
   border: "none",
   borderRadius: 8,
   cursor: "pointer",
+};
+
+const statCard = {
+  background: "#ffffff",
+  padding: "20px",
+  borderRadius: 12,
+  border: "1px solid #e5e7eb",
+  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+};
+
+const statLabel = {
+  fontSize: 14,
+  color: "#6b7280",
+  marginBottom: 8,
+};
+
+const statValue = {
+  fontSize: 28,
+  fontWeight: 700,
+  margin: 0,
 };
