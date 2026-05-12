@@ -12,6 +12,7 @@ function DashboardPage() {
   const [portals, setPortals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const [editingPortal, setEditingPortal] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({
@@ -223,6 +224,40 @@ Thanks`);
   </div>
 </div>
 
+<div
+  style={{
+    display: "flex",
+    gap: 10,
+    marginBottom: 24,
+    flexWrap: "wrap",
+  }}
+>
+  {["all", "not_started", "in_progress", "completed"].map((status) => (
+    <button
+      key={status}
+      onClick={() => setStatusFilter(status)}
+      style={{
+        padding: "10px 14px",
+        borderRadius: 8,
+        border: "none",
+        cursor: "pointer",
+        background:
+          statusFilter === status ? "#2563eb" : "#f3f4f6",
+        color:
+          statusFilter === status ? "white" : "#111827",
+      }}
+    >
+      {status === "all"
+        ? "All"
+        : status === "not_started"
+        ? "Not Started"
+        : status === "in_progress"
+        ? "In Progress"
+        : "Completed"}
+    </button>
+  ))}
+</div>
+
       {loading ? (
         <p>Loading...</p>
       ) : portals.length === 0 ? (
@@ -240,6 +275,17 @@ Thanks`);
         .toLowerCase()
         .includes(search.toLowerCase()))
 )
+  .filter((portal) => {
+    const progress = getProgress(portal);
+
+    if (statusFilter === "all") return true;
+    if (statusFilter === "not_started") return progress === 0;
+    if (statusFilter === "completed") return progress === 100;
+    if (statusFilter === "in_progress")
+      return progress > 0 && progress < 100;
+
+    return true;
+  })
             .map((portal) => {
               const progress = getProgress(portal);
 
