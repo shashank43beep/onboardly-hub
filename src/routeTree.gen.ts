@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalIdRouteImport } from './routes/portal.$id'
 import { Route as DashboardNewIndexRouteImport } from './routes/dashboard.new.index'
 import { Route as DashboardSubmissionIdRouteImport } from './routes/dashboard.submission.$id'
+import { Route as DashboardActivityIdRouteImport } from './routes/dashboard.activity.$id'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -70,6 +71,11 @@ const DashboardSubmissionIdRoute = DashboardSubmissionIdRouteImport.update({
   path: '/submission/$id',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardActivityIdRoute = DashboardActivityIdRouteImport.update({
+  id: '/activity/$id',
+  path: '/activity/$id',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/portal/$id': typeof PortalIdRoute
+  '/dashboard/activity/$id': typeof DashboardActivityIdRoute
   '/dashboard/submission/$id': typeof DashboardSubmissionIdRoute
   '/dashboard/new/': typeof DashboardNewIndexRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/portal/$id': typeof PortalIdRoute
+  '/dashboard/activity/$id': typeof DashboardActivityIdRoute
   '/dashboard/submission/$id': typeof DashboardSubmissionIdRoute
   '/dashboard/new': typeof DashboardNewIndexRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/portal/$id': typeof PortalIdRoute
+  '/dashboard/activity/$id': typeof DashboardActivityIdRoute
   '/dashboard/submission/$id': typeof DashboardSubmissionIdRoute
   '/dashboard/new/': typeof DashboardNewIndexRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/portal/$id'
+    | '/dashboard/activity/$id'
     | '/dashboard/submission/$id'
     | '/dashboard/new/'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/portal/$id'
+    | '/dashboard/activity/$id'
     | '/dashboard/submission/$id'
     | '/dashboard/new'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/portal/$id'
+    | '/dashboard/activity/$id'
     | '/dashboard/submission/$id'
     | '/dashboard/new/'
   fileRoutesById: FileRoutesById
@@ -230,15 +242,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSubmissionIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/activity/$id': {
+      id: '/dashboard/activity/$id'
+      path: '/activity/$id'
+      fullPath: '/dashboard/activity/$id'
+      preLoaderRoute: typeof DashboardActivityIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardActivityIdRoute: typeof DashboardActivityIdRoute
   DashboardSubmissionIdRoute: typeof DashboardSubmissionIdRoute
   DashboardNewIndexRoute: typeof DashboardNewIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardActivityIdRoute: DashboardActivityIdRoute,
   DashboardSubmissionIdRoute: DashboardSubmissionIdRoute,
   DashboardNewIndexRoute: DashboardNewIndexRoute,
 }

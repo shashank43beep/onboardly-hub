@@ -4,6 +4,15 @@ import { supabase } from "@/lib/supabase";
 import { portalStore } from "@/lib/storage";
 import { toast } from "sonner";
 import { Toaster } from "sonner";
+import {
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -485,7 +494,14 @@ Thanks`);
                     >
                       Delete
                     </button>
-
+                    <button
+  onClick={() =>
+    window.location.assign(`/dashboard/activity/${portal.id}`)
+  }
+  style={buttonGray}
+>
+  Activity Timeline
+</button>
                     <button
                       onClick={() => archivePortal(portal.id)}
                       style={buttonGray}
@@ -497,6 +513,34 @@ Thanks`);
               );
             })}
 <Outlet />
+
+<div
+  style={{
+    marginTop: 40,
+    background: "#fff",
+    padding: 24,
+    borderRadius: 12,
+    border: "1px solid #e5e7eb",
+    height: 320,
+  }}
+>
+  <h2 style={{ marginBottom: 20 }}>Portal Progress Overview</h2>
+
+  <ResponsiveContainer width="100%" height="100%">
+    <BarChart
+      data={portals.map((portal) => ({
+        name: portal.portalName,
+        progress: getProgress(portal),
+      }))}
+    >
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
+      <YAxis />
+      <Tooltip />
+      <Bar dataKey="progress" fill="#2563eb" radius={[6, 6, 0, 0]} />
+    </BarChart>
+  </ResponsiveContainer>
+</div>
           <h2 style={{ marginTop: 40 }}>Archived Portals</h2>
 
           {portals
