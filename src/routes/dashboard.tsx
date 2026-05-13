@@ -50,6 +50,36 @@ function DashboardPage() {
     initialize();
   }, []);
 
+
+  function exportCSV() {
+  const headers = ["Portal Name", "Client Name", "Email", "Status"];
+
+  const rows = portals.map((portal) => [
+    portal.portalName || "",
+    portal.clientName || "",
+    portal.clientEmail || "",
+    getStatus(getProgress(portal)),
+  ]);
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) => row.join(",")),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "portals.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  toast.success("CSV exported");
+}
   async function handleLogout() {
     await supabase.auth.signOut();
     window.location.href = "/login";
@@ -196,6 +226,11 @@ Thanks`);
         >
           + Create Portal
         </button>
+
+      <button onClick={exportCSV} style={buttonGray}>
+      Export CSV
+        </button>
+
 
         <button onClick={handleLogout} style={buttonRed}>
           Logout
