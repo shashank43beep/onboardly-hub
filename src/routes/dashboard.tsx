@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { portalStore } from "@/lib/storage";
 import { toast } from "sonner";
+import { Toaster } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -61,12 +62,11 @@ function DashboardPage() {
   }
 
   function sendInvite(portal: any) {
-    if (!portal.clientEmail) {
-      toast.error("No client email found");
-      return;
-    }
-
-    const link = `${window.location.origin}/portal/${portal.id}`;
+    if (!portal.clientEmail || portal.clientEmail.trim() === "") {
+  toast.error("No client email found");
+  return;
+}
+       const link = `${window.location.origin}/portal/${portal.id}`;
 
     const subject = encodeURIComponent(
       `Your onboarding portal - ${portal.portalName}`
@@ -87,6 +87,35 @@ Thanks`);
 
     toast.success("Email draft opened");
   }
+
+  function sendReminder(portal: any) {
+  if (!portal.clientEmail || portal.clientEmail.trim() === "") {
+  toast.error("No client email found");
+  return;
+}
+    const link = `${window.location.origin}/portal/${portal.id}`;
+    const subject = encodeURIComponent(
+    `Reminder: Complete onboarding - ${portal.portalName}`
+  );
+
+  const body = encodeURIComponent(`Hi ${portal.clientName},
+
+Just a quick reminder to complete your onboarding portal.
+
+Complete here:
+${link}
+
+Let us know if you need help.
+
+Thanks`);
+
+  window.open(
+    `mailto:${portal.clientEmail}?subject=${subject}&body=${body}`
+  );
+
+  toast.success("Reminder email opened");
+}
+    
 
   async function deletePortal(id: string) {
     const confirmed = window.confirm(
@@ -155,6 +184,8 @@ Thanks`);
   }
 
   return (
+    <>
+    <Toaster position="top-center" />
     <div style={{ padding: 40 }}>
       <h1>Dashboard</h1>
 
@@ -382,6 +413,13 @@ Thanks`);
                     </button>
 
                     <button
+                    onClick={() => sendReminder(portal)}
+                    style={buttonGray}
+                    >
+                    Reminder Email
+                    </button>
+
+                    <button
                       onClick={() =>
                         window.open(`/portal/${portal.id}`, "_blank")
                       }
@@ -568,6 +606,7 @@ Thanks`);
       )}
 
     </div>
+   </>
   );
 }
 
