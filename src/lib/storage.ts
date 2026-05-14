@@ -22,6 +22,7 @@ export type Portal = {
   archived?: boolean;
   createdAt: string;
   progress: PortalProgress;
+  brandColor?: string;
 };
 
 function mapDbToPortal(row: any): Portal {
@@ -35,6 +36,7 @@ function mapDbToPortal(row: any): Portal {
     brandLogo: row.brand_logo || "",
     paymentLink: row.payment_link || "",
     meetingLink: row.meeting_link || "",
+    brandColor: row.brand_color || "",
     webhookUrl: row.webhook_url || "",
     notes: row.notes || "",
     archived: row.archived || false,
@@ -91,6 +93,7 @@ export const portalStore = {
       meeting_link: data.meetingLink,
       webhook_url: data.webhookUrl || "",
       notes: data.notes || "",
+      brand_color: data.brandColor || "",
       archived: false,
       progress: {
         formComplete: false,

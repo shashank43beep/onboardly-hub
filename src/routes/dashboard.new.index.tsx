@@ -17,6 +17,7 @@ function NewPortalPage() {
     meetingLink: "",
     webhookUrl: "",
     brandLogo: "",
+    brandColor: "#2563eb",
   });
 
   const [error, setError] = useState("");
@@ -65,6 +66,7 @@ function NewPortalPage() {
         meetingLink: form.meetingLink,
         webhookUrl: form.webhookUrl,
         brandLogo: form.brandLogo,
+        brandColor: form.brandColor,
         archived: false,
       });
 
@@ -107,6 +109,27 @@ function NewPortalPage() {
           maxWidth: "420px",
         }}
       >
+        <div style={{ marginBottom: 16 }}>
+  <label>Brand Color</label>
+  <input
+    type="color"
+    value={form.brandColor}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        brandColor: e.target.value,
+      })
+    }
+    style={{
+      display: "block",
+      marginTop: 8,
+      width: 60,
+      height: 40,
+      border: "none",
+      cursor: "pointer",
+    }}
+  />
+</div>
         <input
           type="text"
           placeholder="Portal Name"
