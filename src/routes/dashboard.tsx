@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { portalStore } from "@/lib/storage";
 import { toast } from "sonner";
 import { Toaster } from "sonner";
+import { sendReminderEmail } from "@/lib/api";
 import {
   BarChart,
   Bar,
@@ -25,6 +26,7 @@ function DashboardPage() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [editingPortal, setEditingPortal] = useState<any | null>(null);
+  const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     portalName: "",
     clientName: "",
@@ -127,32 +129,36 @@ Thanks`);
     toast.success("Email draft opened");
   }
 
-  function sendReminder(portal: any) {
+  // ADD this import at the top of dashboard.tsx with your other imports:
+// import { sendReminderEmail } from "@/lib/api";
+
+// ADD this state inside DashboardPage() near your other useState calls:
+// const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
+
+async function sendReminder(portal: any) {
   if (!portal.clientEmail || portal.clientEmail.trim() === "") {
-  toast.error("No client email found");
-  return;
-}
-    const link = `${window.location.origin}/portal/${portal.id}`;
-    const subject = encodeURIComponent(
-    `Reminder: Complete onboarding - ${portal.portalName}`
-  );
+    toast.error("No client email found for this portal.");
+    return;
+  }
 
-  const body = encodeURIComponent(`Hi ${portal.clientName},
+  setSendingReminderId(portal.id);
 
-Just a quick reminder to complete your onboarding portal.
+  try {
+    await sendReminderEmail({
+      portalId: portal.id,
+      clientEmail: portal.clientEmail,
+      clientName: portal.clientName,
+      portalName: portal.portalName,
+      portalUrl: `${window.location.origin}/portal/${portal.id}`,
+    });
 
-Complete here:
-${link}
-
-Let us know if you need help.
-
-Thanks`);
-
-  window.open(
-    `mailto:${portal.clientEmail}?subject=${subject}&body=${body}`
-  );
-
-  toast.success("Reminder email opened");
+    toast.success(`Reminder sent to ${portal.clientEmail}`);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to send";
+    toast.error(message);
+  } finally {
+    setSendingReminderId(null);
+  }
 }
     
 
@@ -457,11 +463,16 @@ Thanks`);
                     </button>
 
                     <button
-                    onClick={() => sendReminder(portal)}
-                    style={buttonGray}
-                    >
-                    Reminder Email
-                    </button>
+  onClick={() => sendReminder(portal)}
+  disabled={sendingReminderId === portal.id}
+  style={{
+    ...buttonGray,
+    opacity: sendingReminderId === portal.id ? 0.6 : 1,
+    cursor: sendingReminderId === portal.id ? "not-allowed" : "pointer",
+  }}
+>
+  {sendingReminderId === portal.id ? "Sending..." : "Reminder Email"}
+</button>
 
                     <button
                       onClick={() =>

@@ -280,6 +280,7 @@ function FormStep({
         {
           portal_id: portal.id,
           client_name: portal.clientName,
+          client_email: portal.clientEmail,
           project_details: data,
         },
       ],
