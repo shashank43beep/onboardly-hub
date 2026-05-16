@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { portalStore } from "@/lib/storage";
 import { toast } from "sonner";
 import { Toaster } from "sonner";
-import { sendReminderEmail } from "@/lib/api";
+import { sendReminderEmail } from "@/lib/api"; 
 import {
   BarChart,
   Bar,
