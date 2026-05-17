@@ -22,6 +22,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteLayout } from "@/components/SiteLayout";
+import { CommentThread } from "@/components/CommentThread";
+import { MessageSquare } from "lucide-react";
 
 import { portalStore, type Portal } from "@/lib/storage";
 import { postToWebhook } from "@/lib/webhook";
@@ -35,7 +37,7 @@ export const Route = createFileRoute("/portal/$id")({
   component: ClientPortal,
 });
 
-type Section = "welcome" | "form" | "files" | "payment" | "meeting" | "done";
+type Section = "welcome" | "form" | "files" | "payment" | "meeting" | "messages" | "done";
 
 function ClientPortal() {
   const { id } = Route.useParams();
@@ -114,6 +116,12 @@ function ClientPortal() {
       icon: Calendar,
       done: portal.progress.meetingBooked,
     },
+    {
+  id: "messages",
+  label: "Messages",
+  icon: MessageSquare,
+  done: false, // always accessible
+},
   ];
 
   return (
@@ -227,6 +235,16 @@ function ClientPortal() {
             )}
 
             {section === "done" && <CompletionStep />}
+            {section === "messages" && (
+  <Card className="p-8">
+    <h2 className="text-xl font-semibold mb-6">Messages</h2>
+    <CommentThread
+      portalId={portal.id}
+      authorType="client"
+      authorName={portal.clientName}
+    />
+  </Card>
+)}
           </main>
         </div>
       </div>

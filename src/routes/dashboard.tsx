@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { portalStore } from "@/lib/storage";
 import { toast } from "sonner";
 import { Toaster } from "sonner";
+import { CommentThread } from "@/components/CommentThread";
 import { sendReminderEmail } from "@/lib/api"; 
 import {
   BarChart,
@@ -27,6 +28,7 @@ function DashboardPage() {
 
   const [editingPortal, setEditingPortal] = useState<any | null>(null);
   const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
+  const [openChatPortalId, setOpenChatPortalId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     portalName: "",
     clientName: "",
@@ -462,6 +464,8 @@ async function sendReminder(portal: any) {
                       Send Invite
                     </button>
 
+                   
+
                     <button
   onClick={() => sendReminder(portal)}
   disabled={sendingReminderId === portal.id}
@@ -519,7 +523,31 @@ async function sendReminder(portal: any) {
                     >
                       Archive
                     </button>
+
+ <button
+  onClick={() =>
+    setOpenChatPortalId(
+      openChatPortalId === portal.id ? null : portal.id
+    )
+  }
+  style={buttonGray}
+>
+  {openChatPortalId === portal.id ? "Close Chat" : "💬 Messages"}
+</button>
+
                   </div>
+                  {openChatPortalId === portal.id && (
+  <div style={{ marginTop: 16 }}>
+    <CommentThread
+      portalId={portal.id}
+      authorType="admin"
+      authorName="Admin"
+      clientEmail={portal.clientEmail}
+      clientName={portal.clientName}
+      portalName={portal.portalName}
+    />
+  </div>
+)}
                 </div>
               );
             })}
