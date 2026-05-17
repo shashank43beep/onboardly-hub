@@ -57,17 +57,21 @@ export function CommentThread({
     const channel = supabase
       .channel(`comments:${portalId}`)
       .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "comments",
-          filter: `portal_id=eq.${portalId}`,
-        },
-        (payload) => {
-          setComments((prev) => [...prev, payload.new as Comment]);
-        }
-      )
+  "postgres_changes",
+  {
+    event: "INSERT",
+    schema: "public",
+    table: "comments",
+    filter: `portal_id=eq.${portalId}`,
+  },
+  (payload) => {
+    const incoming = payload.new as Comment;
+    // ✅ Only add via Realtime if message came from the OTHER side
+    if (incoming.author_type !== authorType) {
+      setComments((prev) => [...prev, incoming]);
+    }
+  }
+)
       .subscribe();
 
     return () => {
