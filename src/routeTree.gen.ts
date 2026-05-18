@@ -17,6 +17,8 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalIdRouteImport } from './routes/portal.$id'
+import { Route as DashboardTeamRouteImport } from './routes/dashboard.team'
+import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
 import { Route as DashboardNewIndexRouteImport } from './routes/dashboard.new.index'
 import { Route as DashboardSubmissionIdRouteImport } from './routes/dashboard.submission.$id'
 import { Route as DashboardActivityIdRouteImport } from './routes/dashboard.activity.$id'
@@ -61,6 +63,16 @@ const PortalIdRoute = PortalIdRouteImport.update({
   path: '/portal/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardTeamRoute = DashboardTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const AcceptInviteTokenRoute = AcceptInviteTokenRouteImport.update({
+  id: '/accept-invite/$token',
+  path: '/accept-invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardNewIndexRoute = DashboardNewIndexRouteImport.update({
   id: '/new/',
   path: '/new/',
@@ -85,6 +97,8 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/accept-invite/$token': typeof AcceptInviteTokenRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/portal/$id': typeof PortalIdRoute
   '/dashboard/activity/$id': typeof DashboardActivityIdRoute
   '/dashboard/submission/$id': typeof DashboardSubmissionIdRoute
@@ -98,6 +112,8 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/accept-invite/$token': typeof AcceptInviteTokenRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/portal/$id': typeof PortalIdRoute
   '/dashboard/activity/$id': typeof DashboardActivityIdRoute
   '/dashboard/submission/$id': typeof DashboardSubmissionIdRoute
@@ -112,6 +128,8 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/accept-invite/$token': typeof AcceptInviteTokenRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/portal/$id': typeof PortalIdRoute
   '/dashboard/activity/$id': typeof DashboardActivityIdRoute
   '/dashboard/submission/$id': typeof DashboardSubmissionIdRoute
@@ -127,6 +145,8 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
+    | '/accept-invite/$token'
+    | '/dashboard/team'
     | '/portal/$id'
     | '/dashboard/activity/$id'
     | '/dashboard/submission/$id'
@@ -140,6 +160,8 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
+    | '/accept-invite/$token'
+    | '/dashboard/team'
     | '/portal/$id'
     | '/dashboard/activity/$id'
     | '/dashboard/submission/$id'
@@ -153,6 +175,8 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
+    | '/accept-invite/$token'
+    | '/dashboard/team'
     | '/portal/$id'
     | '/dashboard/activity/$id'
     | '/dashboard/submission/$id'
@@ -167,6 +191,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  AcceptInviteTokenRoute: typeof AcceptInviteTokenRoute
   PortalIdRoute: typeof PortalIdRoute
 }
 
@@ -228,6 +253,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/team': {
+      id: '/dashboard/team'
+      path: '/team'
+      fullPath: '/dashboard/team'
+      preLoaderRoute: typeof DashboardTeamRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/accept-invite/$token': {
+      id: '/accept-invite/$token'
+      path: '/accept-invite/$token'
+      fullPath: '/accept-invite/$token'
+      preLoaderRoute: typeof AcceptInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/new/': {
       id: '/dashboard/new/'
       path: '/new'
@@ -253,12 +292,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardTeamRoute: typeof DashboardTeamRoute
   DashboardActivityIdRoute: typeof DashboardActivityIdRoute
   DashboardSubmissionIdRoute: typeof DashboardSubmissionIdRoute
   DashboardNewIndexRoute: typeof DashboardNewIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardTeamRoute: DashboardTeamRoute,
   DashboardActivityIdRoute: DashboardActivityIdRoute,
   DashboardSubmissionIdRoute: DashboardSubmissionIdRoute,
   DashboardNewIndexRoute: DashboardNewIndexRoute,
@@ -276,6 +317,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  AcceptInviteTokenRoute: AcceptInviteTokenRoute,
   PortalIdRoute: PortalIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Toaster } from "sonner";
 import { CommentThread } from "@/components/CommentThread";
 import { sendReminderEmail } from "@/lib/api"; 
+import { useRole } from "@/hooks/useRole";
 import {
   BarChart,
   Bar,
@@ -25,6 +26,7 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const { isOwner, ownerId } = useRole();
 
   const [editingPortal, setEditingPortal] = useState<any | null>(null);
   const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
@@ -36,9 +38,9 @@ function DashboardPage() {
   });
 
   async function loadPortals() {
-    const data = await portalStore.list();
-    setPortals(data || []);
-  }
+  const data = await portalStore.list();
+  setPortals(data || []);
+}
 
   useEffect(() => {
     async function initialize() {
@@ -248,6 +250,14 @@ async function sendReminder(portal: any) {
       Export CSV
         </button>
 
+      {isOwner && (
+    <button
+      onClick={() => window.location.assign("/dashboard/team")}
+      style={buttonGray}
+    >
+      👥 Team
+    </button>
+  )}
 
         <button onClick={handleLogout} style={buttonRed}>
           Logout
@@ -351,12 +361,8 @@ async function sendReminder(portal: any) {
             .filter(
   (portal) =>
     portal.archived !== true &&
-    (portal.portalName
-      .toLowerCase()
-      .includes(search.toLowerCase()) ||
-      portal.clientName
-        .toLowerCase()
-        .includes(search.toLowerCase()))
+    (portal.portalName?.toLowerCase() || "").includes(search.toLowerCase()) ||
+(portal.clientName?.toLowerCase() || "").includes(search.toLowerCase())
 )
   .filter((portal) => {
     const progress = getProgress(portal);
@@ -503,20 +509,24 @@ async function sendReminder(portal: any) {
                       Edit
                     </button>
 
+                    {/* Only owners can delete portals */}
+                    {isOwner && (
                     <button
-                      onClick={() => deletePortal(portal.id)}
-                      style={buttonRed}
+                    onClick={() => deletePortal(portal.id)}
+                    style={buttonRed}
                     >
-                      Delete
+                     Delete
                     </button>
+                  )}
                     <button
-  onClick={() =>
-    window.location.assign(`/dashboard/activity/${portal.id}`)
-  }
-  style={buttonGray}
->
-  Activity Timeline
-</button>
+                  onClick={() =>
+                  window.location.assign(`/dashboard/activity/${portal.id}`)
+                   }
+                  style={buttonGray}
+                  >
+                  Activity Timeline
+                  </button>
+
                     <button
                       onClick={() => archivePortal(portal.id)}
                       style={buttonGray}
@@ -586,12 +596,8 @@ async function sendReminder(portal: any) {
             .filter((portal) => portal.archived === true).filter(
   (portal) =>
     portal.archived &&
-    (portal.portalName
-      .toLowerCase()
-      .includes(search.toLowerCase()) ||
-      portal.clientName
-        .toLowerCase()
-        .includes(search.toLowerCase()))
+    (portal.portalName?.toLowerCase() || "").includes(search.toLowerCase()) ||
+(portal.clientName?.toLowerCase() || "").includes(search.toLowerCase())
 )
             .map((portal) => (
               <div
