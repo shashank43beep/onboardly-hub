@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+
+import { createFileRoute,useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { portalStore } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
@@ -19,7 +20,7 @@ function NewPortalPage() {
     brandLogo: "",
     brandColor: "#2563eb",
   });
-
+  const navigate = useNavigate();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -74,7 +75,7 @@ function NewPortalPage() {
         throw new Error("Portal creation failed");
       }
 
-      window.location.href = "/dashboard";
+      navigate({ to: "/dashboard" });
     } catch (err) {
       console.error(err);
       setError("Failed to create portal");
@@ -87,12 +88,12 @@ function NewPortalPage() {
     <div
       style={{
         minHeight: "100vh",
-        padding: "40px",
+        padding: "24px 40px",
         background: "#f8fafc",
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <h1 style={{ fontSize: "30px", marginBottom: "24px" }}>
+      <h1 style={{ fontSize: "22px", marginBottom: "16px" }}>
         Create Client Portal
       </h1>
 

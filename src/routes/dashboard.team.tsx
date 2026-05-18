@@ -96,7 +96,7 @@ function TeamPage() {
   return (
     <>
       <Toaster position="top-center" />
-      <div style={{ padding: 40, maxWidth: 640 }}>
+      <div style={{ padding: "16px 40px", maxWidth: 640 }}>
         <button
           onClick={() => window.location.assign("/dashboard")}
           style={{
@@ -108,13 +108,13 @@ function TeamPage() {
           ← Back to Dashboard
         </button>
 
-        <h1 style={{ fontSize: 26, fontWeight: 700, 
-          color: "#111827", margin: "0 0 4px" }}>
-          Team Members
-        </h1>
-        <p style={{ color: "#6b7280", fontSize: 14, margin: "0 0 32px" }}>
-          Invite people to help manage your client portals.
-        </p>
+        <h1 style={{ fontSize: 22, fontWeight: 700,
+  color: "#111827", margin: "0 0 4px" }}>
+  Team Members
+</h1>
+<p style={{ color: "#6b7280", fontSize: 14, margin: "0 0 20px" }}>
+  Invite people to help manage your client portals.
+</p>
 
         {/* Invite Form */}
         <div style={{

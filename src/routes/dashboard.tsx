@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+
+import { createFileRoute, Outlet} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { portalStore } from "@/lib/storage";
@@ -7,6 +8,7 @@ import { Toaster } from "sonner";
 import { CommentThread } from "@/components/CommentThread";
 import { sendReminderEmail } from "@/lib/api"; 
 import { useRole } from "@/hooks/useRole";
+
 import {
   BarChart,
   Bar,
@@ -27,6 +29,7 @@ function DashboardPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const { isOwner, ownerId } = useRole();
+  const isExactDashboard = window.location.pathname === "/dashboard";
 
   const [editingPortal, setEditingPortal] = useState<any | null>(null);
   const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
@@ -233,8 +236,11 @@ async function sendReminder(portal: any) {
   }
 
   return (
-    <>
+  <>
     <Toaster position="top-center" />
+    {!isExactDashboard ? (
+      <Outlet />
+    ) : (
     <div style={{ padding: 40 }}>
       <h1>Dashboard</h1>
 
@@ -561,7 +567,7 @@ async function sendReminder(portal: any) {
                 </div>
               );
             })}
-<Outlet />
+
 
 <div
   style={{
@@ -730,6 +736,7 @@ async function sendReminder(portal: any) {
       )}
 
     </div>
+    )}
    </>
   );
 }
