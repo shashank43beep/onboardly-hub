@@ -28,7 +28,8 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const { isOwner, ownerId } = useRole();
+  const { isOwner,isMember, loading: roleLoading } = useRole();
+  console.log("Role state:", { isOwner, isMember, roleLoading });
   const isExactDashboard = window.location.pathname === "/dashboard";
 
   const [editingPortal, setEditingPortal] = useState<any | null>(null);
@@ -256,14 +257,15 @@ async function sendReminder(portal: any) {
       Export CSV
         </button>
 
-      {isOwner && (
-    <button
-      onClick={() => window.location.assign("/dashboard/team")}
-      style={buttonGray}
-    >
-      👥 Team
-    </button>
-  )}
+      {/* Show unless confirmed member — avoids hiding during loading */}
+{!isMember && (
+  <button
+    onClick={() => window.location.assign("/dashboard/team")}
+    style={buttonGray}
+  >
+    👥 Team
+  </button>
+)}
 
         <button onClick={handleLogout} style={buttonRed}>
           Logout
@@ -516,14 +518,11 @@ async function sendReminder(portal: any) {
                     </button>
 
                     {/* Only owners can delete portals */}
-                    {isOwner && (
-                    <button
-                    onClick={() => deletePortal(portal.id)}
-                    style={buttonRed}
-                    >
-                     Delete
-                    </button>
-                  )}
+                    {!isMember && (
+  <button onClick={() => deletePortal(portal.id)} style={buttonRed}>
+    Delete
+  </button>
+)}
                     <button
                   onClick={() =>
                   window.location.assign(`/dashboard/activity/${portal.id}`)
