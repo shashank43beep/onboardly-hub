@@ -44,6 +44,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // Prevent owner from inviting themselves
+if (memberEmail === ownerEmail) {
+  return res.status(400).json({ error: "You cannot invite yourself" });
+}
+
     // Generate secure invite token
     const token = randomBytes(32).toString("hex");
 

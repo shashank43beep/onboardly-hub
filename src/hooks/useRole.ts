@@ -33,6 +33,7 @@ export function useRole(): UseRoleReturn {
         .select("role, owner_id, status")
         .eq("member_id", user.id)
         .eq("status", "active")
+        .neq("owner_id", user.id)
         .maybeSingle();
 
       if (membership) {
