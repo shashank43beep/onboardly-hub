@@ -3,12 +3,31 @@ import { Resend } from "resend";
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "crypto";
 
+
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  // Temporary debug — remove after fixing
+console.log("Env check:", {
+  hasResend: !!process.env.RESEND_API_KEY,
+  hasSupabaseUrl: !!process.env.SUPABASE_URL,
+  hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+});
+
+if (!process.env.RESEND_API_KEY || !process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  return res.status(500).json({ 
+    error: `Missing: ${[
+      !process.env.RESEND_API_KEY && "RESEND_API_KEY",
+      !process.env.SUPABASE_URL && "SUPABASE_URL", 
+      !process.env.SUPABASE_SERVICE_ROLE_KEY && "SUPABASE_SERVICE_ROLE_KEY",
+    ].filter(Boolean).join(", ")}` 
+  });
+}
 
   if (!process.env.RESEND_API_KEY || !process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return res.status(500).json({ error: "Missing environment variables" });
