@@ -8,6 +8,9 @@ import { Toaster } from "sonner";
 import { CommentThread } from "@/components/CommentThread";
 import { sendReminderEmail } from "@/lib/api"; 
 import { useRole } from "@/hooks/useRole";
+import { Logo } from "@/components/logo";
+
+
 
 import {
   BarChart,
@@ -243,7 +246,10 @@ async function sendReminder(portal: any) {
       <Outlet />
     ) : (
     <div style={{ padding: 40 }}>
-      <h1>Dashboard</h1>
+      <div style={{ display: "flex", alignItems: "center", 
+  justifyContent: "space-between", marginBottom: 24 }}>
+  <Logo size={28} variant="full" />
+</div>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 30 }}>
         <button

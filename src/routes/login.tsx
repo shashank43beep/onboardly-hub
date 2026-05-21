@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { Logo } from "@/components/logo";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Auth — Onboardly" }] }),
@@ -49,9 +50,7 @@ function Auth() {
     <SiteLayout>
       <Toaster />
       <div className="mx-auto flex max-w-md flex-col items-center px-6 py-20">
-        <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl text-primary-foreground" style={{ background: "var(--gradient-hero)" }}>
-          <Sparkles className="h-5 w-5" />
-        </span>
+        <Logo size={48} variant="icon" />
         <h1 className="text-3xl font-semibold tracking-tight">
           {isSignUp ? "Create an account" : "Welcome back"}
         </h1>

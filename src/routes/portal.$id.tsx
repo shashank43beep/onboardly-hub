@@ -24,6 +24,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SiteLayout } from "@/components/SiteLayout";
 import { CommentThread } from "@/components/CommentThread";
 import { MessageSquare } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 import { portalStore, type Portal } from "@/lib/storage";
 import { postToWebhook } from "@/lib/webhook";
@@ -172,16 +173,14 @@ function ClientPortal() {
           <aside className="space-y-6">
             <div className="flex items-center gap-3">
               {portal.brandLogo ? (
-                <img
-                  src={portal.brandLogo}
-                  alt={portal.clientName}
-                  className="h-10 w-10 rounded-lg object-contain"
-                />
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold">
-                  {portal.clientName.charAt(0)}
-                </div>
-              )}
+  <img
+    src={portal.brandLogo}
+    alt={portal.clientName}
+    className="h-10 w-10 rounded-lg object-contain"
+  />
+) : (
+  <Logo size={40} variant="icon" />
+)}
 
               <div className="w-full">
                 <h2 className="font-semibold">{portal.portalName}</h2>
