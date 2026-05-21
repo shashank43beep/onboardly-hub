@@ -12,12 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  // Temporary debug — remove after fixing
-console.log("Env check:", {
-  hasResend: !!process.env.RESEND_API_KEY,
-  hasSupabaseUrl: !!process.env.SUPABASE_URL,
-  hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-});
+ 
 
 if (!process.env.RESEND_API_KEY || !process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   return res.status(500).json({ 

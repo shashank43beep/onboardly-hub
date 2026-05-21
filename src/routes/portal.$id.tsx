@@ -32,12 +32,51 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+
 export const Route = createFileRoute("/portal/$id")({
   head: ({ params }) => ({ meta: [{ title: `Portal — ${params.id}` }] }),
   component: ClientPortal,
 });
+async function sendStepEmail(
+  step: string,
+  portal: Portal,
+  isComplete: boolean
+) {
+  const clientEmail = portal.clientEmail;
+  if (!clientEmail) return;
+
+  const portalUrl = `${window.location.origin}/portal/${portal.id}`;
+
+  if (isComplete) {
+    // All steps done — send completion email
+    await fetch("/api/send-completion", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientEmail,
+        clientName: portal.clientName,
+        portalName: portal.portalName,
+        portalUrl,
+      }),
+    }).catch(() => {});
+  } else {
+    // Individual step done
+    await fetch("/api/send-step-notification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientEmail,
+        clientName: portal.clientName,
+        portalName: portal.portalName,
+        portalUrl,
+        step,
+      }),
+    }).catch(() => {});
+  }
+}
 
 type Section = "welcome" | "form" | "files" | "payment" | "meeting" | "messages" | "done";
+
 
 function ClientPortal() {
   const { id } = Route.useParams();
@@ -199,6 +238,7 @@ function ClientPortal() {
                 portal={portal}
                 onDone={() => {
                   refresh();
+                  sendStepEmail("form", portal, false); 
                   setSection("files");
                 }}
               />
@@ -209,6 +249,7 @@ function ClientPortal() {
                 portal={portal}
                 onDone={() => {
                   refresh();
+                  sendStepEmail("files", portal, false); 
                   setSection("payment");
                 }}
               />
@@ -219,6 +260,7 @@ function ClientPortal() {
                 portal={portal}
                 onDone={() => {
                   refresh();
+                  sendStepEmail("payment", portal, false);
                   setSection("meeting");
                 }}
               />
@@ -229,6 +271,7 @@ function ClientPortal() {
                 portal={portal}
                 onDone={() => {
                   refresh();
+                  sendStepEmail("meeting", portal, true);
                   setSection("done");
                 }}
               />

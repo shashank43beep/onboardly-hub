@@ -75,6 +75,25 @@ function NewPortalPage() {
         throw new Error("Portal creation failed");
       }
 
+      if (form.clientEmail) {
+      try {
+        await fetch("/api/send-portal-invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clientEmail: form.clientEmail,
+            clientName: form.clientName,
+            portalName: form.portalName,
+            portalUrl: `${window.location.origin}/portal/${portal.id}`,
+            welcomeMessage: form.welcomeMessage,
+          }),
+        });
+      } catch {
+        // Don't block portal creation if email fails
+      }
+    }
+    window.location.href = "/dashboard";
+
       navigate({ to: "/dashboard" });
     } catch (err) {
       console.error(err);
