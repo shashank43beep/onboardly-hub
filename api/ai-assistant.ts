@@ -136,7 +136,12 @@ YOUR RULES:
     });
 
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return res.status(500).json({ error: message });
-  }
+  const message = err instanceof Error ? err.message : "Unknown error";
+  const stack = err instanceof Error ? err.stack : "";
+  console.error("AI Assistant crash:", message, stack);
+  return res.status(500).json({ 
+    error: message,
+    hint: stack?.split("\n")[1] || ""
+  });
+}
 }
