@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -8,15 +8,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-  
 
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(500).json({ error: "GEMINI_API_KEY not set" });
+  if (!process.env.GROQ_API_KEY) {
+    return res.status(500).json({ error: "Missing: GROQ_API_KEY" });
   }
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(500).json({ error: "Supabase env vars not set" });
+  if (!process.env.SUPABASE_URL) {
+    return res.status(500).json({ error: "Missing: SUPABASE_URL" });
   }
-
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({ error: "Missing: SUPABASE_SERVICE_ROLE_KEY" });
+  }
 
   const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -30,7 +31,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Fetch portal details
     const { data: portal } = await supabase
       .from("portals")
       .select("*")
@@ -41,7 +41,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(404).json({ error: "Portal not found" });
     }
 
-    // Fetch submission/progress
     const { data: submission } = await supabase
       .from("submissions")
       .select("*")
@@ -87,34 +86,29 @@ YOUR RULES:
 6. Never make up information not in the context above
 7. No markdown, no bullet points — plain conversational English only`;
 
-    // Build Gemini chat
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-8b",
-      systemInstruction: systemPrompt,
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+    // Convert messages to Groq format
+    const groqMessages = [
+      { role: "system" as const, content: systemPrompt },
+      ...messages.map((m: { role: string; content: string }) => ({
+        role: m.role === "assistant" ? "assistant" as const : "user" as const,
+        content: m.content,
+      })),
+    ];
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: groqMessages,
+      max_tokens: 300,
+      temperature: 0.7,
     });
 
-    // Convert messages to Gemini format
-    // Gemini needs alternating user/model roles
-    // First message is always from assistant (our welcome) — skip it for history
-    const history = messages
-      .slice(1, -1) // remove first assistant message + last user message
-      .map((m: { role: string; content: string }) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      }));
+    const aiText = completion.choices[0]?.message?.content || "I'm not sure how to help with that.";
 
-    const lastUserMessage = messages[messages.length - 1];
-
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessage(lastUserMessage.content);
-    const aiText = result.response.text();
-
-    // Check escalation
     const shouldEscalate = aiText.includes("[ESCALATE]");
     const cleanText = aiText.replace("[ESCALATE]", "").trim();
 
-    // Auto-post to comments if escalating
     if (shouldEscalate) {
       const lastUserMsg = [...messages]
         .reverse()
@@ -136,12 +130,8 @@ YOUR RULES:
     });
 
   } catch (err: unknown) {
-  const message = err instanceof Error ? err.message : "Unknown error";
-  const stack = err instanceof Error ? err.stack : "";
-  console.error("AI Assistant crash:", message, stack);
-  return res.status(500).json({ 
-    error: message,
-    hint: stack?.split("\n")[1] || ""
-  });
-}
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("AI Assistant crash:", message);
+    return res.status(500).json({ error: message });
+  }
 }
