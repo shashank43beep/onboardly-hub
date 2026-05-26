@@ -417,32 +417,196 @@ function FilesStep({
   onDone: () => void;
 }) {
   const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState<string[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    const dropped = Array.from(e.dataTransfer.files);
+    setFiles((prev) => [...prev, ...dropped]);
+  }
+
+  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files || []);
+    setFiles((prev) => [...prev, ...selected]);
+  }
+
+  function removeFile(index: number) {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function formatSize(bytes: number) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
 
   async function handleUpload() {
-    await portalStore.updateProgress(portal.id, {
-      filesUploaded: true,
-    });
+    if (files.length === 0) {
+      toast.error("Please select at least one file");
+      return;
+    }
 
-    toast.success("Files uploaded");
-    onDone();
+    setUploading(true);
+    const successfulUploads: string[] = [];
+
+    for (const file of files) {
+      const filePath = `${portal.id}/${Date.now()}_${file.name}`;
+
+      const { error } = await supabase.storage
+        .from("portal-files")
+        .upload(filePath, file, { upsert: true });
+
+      if (error) {
+        toast.error(`Failed to upload ${file.name}: ${error.message}`);
+      } else {
+        successfulUploads.push(file.name);
+      }
+    }
+
+    if (successfulUploads.length > 0) {
+      setUploaded(successfulUploads);
+
+      await portalStore.updateProgress(portal.id, {
+        filesUploaded: true,
+      });
+
+      toast.success(
+        `${successfulUploads.length} file${successfulUploads.length > 1 ? "s" : ""} uploaded successfully!`
+      );
+
+      setTimeout(() => onDone(), 1500);
+    }
+
+    setUploading(false);
   }
 
   return (
     <Card className="p-8">
-      <input
-        type="file"
-        multiple
-        onChange={(e) =>
-          setFiles(Array.from(e.target.files || []))
-        }
-      />
+      <h2 className="text-2xl font-bold mb-2">Upload Your Files</h2>
+      <p className="text-muted-foreground text-sm mb-6">
+        Upload any logos, brand assets, documents or references.
+      </p>
+
+      {/* Drag and Drop Zone */}
+      <div
+        onDrop={handleDrop}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onClick={() => document.getElementById("file-input")?.click()}
+        style={{
+          border: `2px dashed ${dragOver ? portal.brandColor || "#6366f1" : "#d1d5db"}`,
+          borderRadius: 12,
+          padding: "40px 24px",
+          textAlign: "center",
+          cursor: "pointer",
+          background: dragOver ? "#f5f3ff" : "#fafafa",
+          transition: "all 0.2s",
+          marginBottom: 20,
+        }}
+      >
+        <Upload
+          className="mx-auto mb-3"
+          style={{
+            width: 36, height: 36,
+            color: dragOver ? portal.brandColor || "#6366f1" : "#9ca3af",
+          }}
+        />
+        <p style={{ fontSize: 15, fontWeight: 600, color: "#374151", margin: "0 0 4px" }}>
+          {dragOver ? "Drop files here" : "Drag & drop files here"}
+        </p>
+        <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
+          or click to browse — any file type accepted
+        </p>
+
+        <input
+          id="file-input"
+          type="file"
+          multiple
+          onChange={handleFileInput}
+          style={{ display: "none" }}
+        />
+      </div>
+
+      {/* File List */}
+      {files.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 8 }}>
+            {files.length} file{files.length > 1 ? "s" : ""} selected
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {files.map((file, index) => (
+              <div
+                key={index}
+                style={{
+                  display: "flex", alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "10px 14px",
+                  background: "#f9fafb",
+                  borderRadius: 8,
+                  border: "1px solid #e5e7eb",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <FileIcon style={{ width: 16, height: 16, color: "#6366f1" }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "#111827" }}>
+                      {file.name}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 11, color: "#9ca3af" }}>
+                      {formatSize(file.size)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeFile(index); }}
+                  style={{
+                    background: "none", border: "none",
+                    cursor: "pointer", color: "#ef4444", padding: 4,
+                  }}
+                >
+                  <X style={{ width: 16, height: 16 }} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Success State */}
+      {uploaded.length > 0 && (
+        <div style={{
+          background: "#f0fdf4", border: "1px solid #bbf7d0",
+          borderRadius: 8, padding: "12px 16px", marginBottom: 16,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <CheckCircle2 style={{ width: 16, height: 16, color: "#16a34a" }} />
+          <p style={{ margin: 0, fontSize: 13, color: "#166534" }}>
+            {uploaded.join(", ")} uploaded successfully!
+          </p>
+        </div>
+      )}
 
       <Button
-        className="mt-6"
         onClick={handleUpload}
-        style={{ background: portal.brandColor || "#2563eb" }}
+        disabled={uploading || files.length === 0}
+        style={{
+          background: files.length === 0 ? "#e5e7eb"
+            : portal.brandColor || "#6366f1",
+          color: files.length === 0 ? "#9ca3af" : "#fff",
+          width: "100%",
+        }}
       >
-        Upload & Continue
+        {uploading ? (
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Loader2 style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} />
+            Uploading {files.length} file{files.length > 1 ? "s" : ""}...
+          </span>
+        ) : (
+          `Upload ${files.length > 0 ? files.length + " file" + (files.length > 1 ? "s" : "") : ""} & Continue`
+        )}
       </Button>
     </Card>
   );
