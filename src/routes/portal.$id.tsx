@@ -29,6 +29,7 @@ import { Logo } from "@/components/logo";
 import { portalStore, type Portal } from "@/lib/storage";
 import { postToWebhook } from "@/lib/webhook";
 import { supabase } from "@/lib/supabase";
+import { AIAssistant } from "@/components/AIAssistant";
 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -290,6 +291,13 @@ function ClientPortal() {
           </main>
         </div>
       </div>
+      {/* ✅ AI Assistant — floating button */}
+    <AIAssistant
+      portalId={portal.id}
+      clientName={portal.clientName}
+      portalName={portal.portalName}
+      brandColor={portal.brandColor || "#6366f1"}
+    />
     </SiteLayout>
   );
 }
