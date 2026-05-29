@@ -420,6 +420,24 @@ function FilesStep({
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState<string[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [existingFiles, setExistingFiles] = useState<string[]>([]);
+  const [loadingExisting, setLoadingExisting] = useState(true); 
+  useEffect(() => {
+  async function loadExistingFiles() {
+    const { data, error } = await supabase.storage
+      .from("portal-files")
+      .list(portal.id, {
+        sortBy: { column: "created_at", order: "desc" },
+      });
+
+    if (!error && data) {
+      setExistingFiles(data.map((f) => f.name));
+    }
+    setLoadingExisting(false);
+  }
+
+  loadExistingFiles();
+}, [portal.id]);
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
@@ -477,7 +495,15 @@ function FilesStep({
         `${successfulUploads.length} file${successfulUploads.length > 1 ? "s" : ""} uploaded successfully!`
       );
 
-      setTimeout(() => onDone(), 1500);
+      // Refresh existing files list
+const { data } = await supabase.storage
+  .from("portal-files")
+  .list(portal.id, {
+    sortBy: { column: "created_at", order: "desc" },
+  });
+if (data) setExistingFiles(data.map((f) => f.name));
+
+setTimeout(() => onDone(), 1500);
     }
 
     setUploading(false);
@@ -574,6 +600,34 @@ function FilesStep({
           </div>
         </div>
       )}
+      
+      {/* Previously Uploaded Files */}
+{!loadingExisting && existingFiles.length > 0 && (
+  <div style={{ marginBottom: 20 }}>
+    <p style={{
+      fontSize: 13, fontWeight: 600,
+      color: "#374151", marginBottom: 8,
+      display: "flex", alignItems: "center", gap: 6,
+    }}>
+      <CheckCircle2 style={{ width: 14, height: 14, color: "#16a34a" }} />
+      Previously uploaded files
+    </p>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {existingFiles.map((name) => (
+        <div key={name} style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "8px 14px",
+          background: "#f0fdf4",
+          borderRadius: 8,
+          border: "1px solid #bbf7d0",
+        }}>
+          <FileIcon style={{ width: 14, height: 14, color: "#16a34a" }} />
+          <span style={{ fontSize: 13, color: "#166534" }}>{name}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
       {/* Success State */}
       {uploaded.length > 0 && (
