@@ -309,19 +309,143 @@ function WelcomeStep({
   portal: Portal;
   onNext: () => void;
 }) {
-  return (
-    <Card className="p-10 text-center">
-      <h1 className="text-3xl font-bold">Welcome, {portal.clientName}</h1>
-      <p className="mt-4 text-muted-foreground">{portal.welcomeMessage}</p>
+  const steps = [
+    { icon: "📋", label: "Intake Form", desc: "Tell us about your project" },
+    { icon: "📁", label: "File Upload", desc: "Share your assets & documents" },
+    { icon: "💳", label: "Payment", desc: "Secure your project slot" },
+    { icon: "📅", label: "Kickoff Call", desc: "Book your first meeting" },
+  ];
 
-      <Button
-        className="mt-8"
-        style={{ background: portal.brandColor || "#2563eb" }}
-        onClick={onNext}
-      >
-        Begin onboarding <ArrowRight className="ml-2 h-4 w-4" />
-      </Button>
-    </Card>
+  return (
+    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      {/* Hero section */}
+      <div style={{
+        background: portal.brandColor || "#6366f1",
+        borderRadius: 20, padding: "40px 36px",
+        textAlign: "center", marginBottom: 20,
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Background circles for depth */}
+        <div style={{
+          position: "absolute", top: -40, right: -40,
+          width: 160, height: 160, borderRadius: "50%",
+          background: "rgba(255,255,255,0.08)",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", bottom: -30, left: -30,
+          width: 120, height: 120, borderRadius: "50%",
+          background: "rgba(255,255,255,0.06)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Logo or initial */}
+        {portal.brandLogo ? (
+          <img
+            src={portal.brandLogo}
+            alt={portal.portalName}
+            style={{
+              width: 64, height: 64, borderRadius: 16,
+              objectFit: "contain", marginBottom: 16,
+              background: "rgba(255,255,255,0.15)",
+            }}
+          />
+        ) : (
+          <div style={{
+            width: 64, height: 64, borderRadius: 16,
+            background: "rgba(255,255,255,0.2)",
+            display: "flex", alignItems: "center",
+            justifyContent: "center", margin: "0 auto 16px",
+            fontSize: 28, fontWeight: 700, color: "#fff",
+          }}>
+            {portal.clientName.charAt(0).toUpperCase()}
+          </div>
+        )}
+
+        <h1 style={{
+          fontSize: 28, fontWeight: 700,
+          color: "#fff", margin: "0 0 8px",
+          letterSpacing: "-0.5px",
+        }}>
+          Welcome, {portal.clientName}! 👋
+        </h1>
+        <p style={{
+          fontSize: 15, color: "rgba(255,255,255,0.85)",
+          margin: "0 0 28px", lineHeight: 1.6,
+          maxWidth: 420, marginLeft: "auto", marginRight: "auto",
+        }}>
+          {portal.welcomeMessage || "We're excited to work with you. This portal will guide you through everything we need to get started."}
+        </p>
+
+        <button
+          onClick={onNext}
+          style={{
+            padding: "13px 32px",
+            background: "#fff",
+            color: portal.brandColor || "#6366f1",
+            border: "none", borderRadius: 10,
+            fontSize: 15, fontWeight: 700,
+            cursor: "pointer",
+            display: "inline-flex", alignItems: "center", gap: 8,
+          }}
+        >
+          Begin Onboarding
+          <ArrowRight style={{ width: 16, height: 16 }} />
+        </button>
+      </div>
+
+      {/* Steps preview */}
+      <div style={{
+        background: "#fff", borderRadius: 16,
+        border: "1px solid #e5e7eb", padding: "24px 28px",
+      }}>
+        <p style={{
+          fontSize: 12, fontWeight: 600, color: "#9ca3af",
+          letterSpacing: "0.8px", textTransform: "uppercase",
+          margin: "0 0 16px",
+        }}>
+          What to expect
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {steps.map((step, i) => (
+            <div key={step.label} style={{
+              display: "flex", alignItems: "center", gap: 14,
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%",
+                background: "#f3f4f6", flexShrink: 0,
+                display: "flex", alignItems: "center",
+                justifyContent: "center", fontSize: 16,
+              }}>
+                {step.icon}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{
+                  margin: 0, fontSize: 14, fontWeight: 600,
+                  color: "#111827",
+                }}>
+                  {i + 1}. {step.label}
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
+                  {step.desc}
+                </p>
+              </div>
+              <div style={{
+                width: 20, height: 20, borderRadius: "50%",
+                border: "2px solid #e5e7eb",
+                flexShrink: 0,
+              }} />
+            </div>
+          ))}
+        </div>
+        <p style={{
+          margin: "16px 0 0", fontSize: 12,
+          color: "#9ca3af", textAlign: "center",
+        }}>
+          ⏱ Takes about 5 minutes to complete
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -727,10 +851,175 @@ function MeetingStep({
 }
 
 function CompletionStep() {
+  const [showConfetti, setShowConfetti] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowConfetti(false), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const completedSteps = [
+    { icon: "📋", label: "Intake Form", desc: "Project details captured" },
+    { icon: "📁", label: "Files Uploaded", desc: "Assets ready for review" },
+    { icon: "💳", label: "Payment Done", desc: "Project slot secured" },
+    { icon: "📅", label: "Meeting Booked", desc: "Kickoff call scheduled" },
+  ];
+
   return (
-    <Card className="p-10 text-center">
-      <PartyPopper className="mx-auto h-10 w-10 text-green-600" />
-      <h1 className="mt-4 text-3xl font-bold">You're all set!</h1>
-    </Card>
+    <div style={{
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      position: "relative",
+    }}>
+
+      {/* Confetti burst */}
+      {showConfetti && (
+        <div style={{
+          position: "absolute", top: 0, left: 0,
+          right: 0, pointerEvents: "none",
+          display: "flex", justifyContent: "center",
+          gap: 8, flexWrap: "wrap", padding: 8,
+          zIndex: 10,
+        }}>
+          {["🎉", "✨", "🎊", "⭐", "🎈", "💫", "🎉", "✨", "🎊"].map((emoji, i) => (
+            <span
+              key={i}
+              style={{
+                fontSize: 24,
+                animation: `fall-${i % 3} 2s ease-in forwards`,
+                animationDelay: `${i * 0.15}s`,
+                display: "inline-block",
+              }}
+            >
+              {emoji}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fall-0 { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(80px) rotate(180deg); opacity: 0; } }
+        @keyframes fall-1 { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100px) rotate(-180deg); opacity: 0; } }
+        @keyframes fall-2 { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(60px) rotate(270deg); opacity: 0; } }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1.4); opacity: 0; } }
+      `}</style>
+
+      {/* Success hero */}
+      <div style={{
+        background: "linear-gradient(135deg, #10b981, #059669)",
+        borderRadius: 20, padding: "44px 36px",
+        textAlign: "center", marginBottom: 20,
+        position: "relative", overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", top: -40, right: -40,
+          width: 160, height: 160, borderRadius: "50%",
+          background: "rgba(255,255,255,0.08)",
+        }} />
+
+        {/* Pulsing checkmark */}
+        <div style={{ position: "relative", display: "inline-block", marginBottom: 20 }}>
+          <div style={{
+            position: "absolute", inset: -8,
+            borderRadius: "50%",
+            border: "3px solid rgba(255,255,255,0.3)",
+            animation: "pulse-ring 1.5s ease-out infinite",
+          }} />
+          <div style={{
+            width: 72, height: 72, borderRadius: "50%",
+            background: "rgba(255,255,255,0.2)",
+            display: "flex", alignItems: "center",
+            justifyContent: "center", fontSize: 36,
+          }}>
+            ✅
+          </div>
+        </div>
+
+        <h1 style={{
+          fontSize: 30, fontWeight: 700,
+          color: "#fff", margin: "0 0 10px",
+          letterSpacing: "-0.5px",
+        }}>
+          You're all done! 🎉
+        </h1>
+        <p style={{
+          fontSize: 15, color: "rgba(255,255,255,0.85)",
+          margin: 0, lineHeight: 1.6, maxWidth: 380,
+          marginLeft: "auto", marginRight: "auto",
+        }}>
+          Congratulations! You've completed all your onboarding steps. We're excited to get started!
+        </p>
+      </div>
+
+      {/* Completed steps */}
+      <div style={{
+        background: "#fff", borderRadius: 16,
+        border: "1px solid #e5e7eb",
+        padding: "24px 28px", marginBottom: 16,
+      }}>
+        <p style={{
+          fontSize: 12, fontWeight: 600, color: "#9ca3af",
+          letterSpacing: "0.8px", textTransform: "uppercase",
+          margin: "0 0 16px",
+        }}>
+          Completed steps
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {completedSteps.map((step) => (
+            <div key={step.label} style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "10px 14px",
+              background: "#f0fdf4",
+              borderRadius: 10,
+              border: "1px solid #bbf7d0",
+            }}>
+              <span style={{ fontSize: 18 }}>{step.icon}</span>
+              <div style={{ flex: 1 }}>
+                <p style={{
+                  margin: 0, fontSize: 13, fontWeight: 600,
+                  color: "#166534",
+                }}>
+                  {step.label}
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: "#4ade80" }}>
+                  {step.desc}
+                </p>
+              </div>
+              <div style={{
+                width: 22, height: 22, borderRadius: "50%",
+                background: "#10b981",
+                display: "flex", alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12, color: "#fff", fontWeight: 700,
+              }}>
+                ✓
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* What's next */}
+      <div style={{
+        background: "#fafafa", borderRadius: 14,
+        border: "1px solid #e5e7eb",
+        padding: "20px 24px", textAlign: "center",
+      }}>
+        <p style={{
+          fontSize: 14, fontWeight: 600,
+          color: "#374151", margin: "0 0 4px",
+        }}>
+          What happens next?
+        </p>
+        <p style={{
+          fontSize: 13, color: "#6b7280",
+          margin: "0 0 12px", lineHeight: 1.6,
+        }}>
+          Our team will review your submission and reach out within 24 hours. Keep an eye on your inbox!
+        </p>
+        <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
+          💬 Have questions? Use the Messages tab to chat with us directly.
+        </p>
+      </div>
+    </div>
   );
 }
