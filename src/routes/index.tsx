@@ -15,9 +15,6 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { SiteLayout } from "@/components/SiteLayout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { Logo } from "@/components/logo";
 
@@ -47,13 +44,34 @@ export const Route = createFileRoute("/")({
 function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  function scrollTo(id: string) {
+    setMobileMenuOpen(false);
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
 
-      {/* ── Navbar ───────────────────────────────────────────────── */}
+      {/* ── Global smooth scroll ── */}
+      <style>{`
+        html { scroll-behavior: smooth; }
+        * { box-sizing: border-box; }
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .mobile-menu-btn { display: flex !important; }
+          .hero-buttons { flex-direction: column; align-items: center; }
+          .hero-buttons a, .hero-buttons button { width: 100%; max-width: 320px; justify-content: center; }
+        }
+        @media (min-width: 769px) {
+          .mobile-menu-btn { display: none !important; }
+        }
+      `}</style>
+
+      {/* ── Navbar ── */}
       <nav style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(255,255,255,0.85)",
+        position: "sticky", top: 0, zIndex: 100,
+        background: "rgba(255,255,255,0.92)",
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid #e5e7eb",
         padding: "0 24px",
@@ -63,22 +81,36 @@ function Home() {
           display: "flex", alignItems: "center",
           justifyContent: "space-between", height: 64,
         }}>
-          {/* Logo */}
           <Logo size={32} variant="full" />
 
-          {/* Desktop Nav */}
-          <div style={{ display: "flex", alignItems: "center", gap: 32 }}
-            className="hidden md:flex">
-            <a href="#features" style={{ fontSize: 14, color: "#6b7280",
-              textDecoration: "none" }}>Features</a>
-            <a href="#how-it-works" style={{ fontSize: 14, color: "#6b7280",
-              textDecoration: "none" }}>How it works</a>
-            <a href="#pricing" style={{ fontSize: 14, color: "#6b7280",
-              textDecoration: "none" }}>Pricing</a>
+          {/* Desktop nav links */}
+          <div className="desktop-nav" style={{
+            display: "flex", alignItems: "center", gap: 32,
+          }}>
+            {[
+              { label: "Features", id: "features" },
+              { label: "How it works", id: "how-it-works" },
+              { label: "Pricing", id: "pricing" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollTo(item.id)}
+                style={{
+                  background: "none", border: "none",
+                  fontSize: 14, color: "#6b7280",
+                  cursor: "pointer", padding: 0,
+                  fontFamily: "inherit",
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
 
-          {/* CTA Buttons */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Desktop CTA */}
+          <div className="desktop-nav" style={{
+            display: "flex", alignItems: "center", gap: 12,
+          }}>
             <Link to="/login" style={{
               fontSize: 14, color: "#374151",
               textDecoration: "none", fontWeight: 500,
@@ -95,10 +127,76 @@ function Home() {
               <ArrowRight style={{ width: 14, height: 14 }} />
             </Link>
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              background: "none", border: "none",
+              cursor: "pointer", padding: 8,
+              display: "none", alignItems: "center",
+              justifyContent: "center", color: "#374151",
+            }}
+          >
+            {mobileMenuOpen
+              ? <X style={{ width: 22, height: 22 }} />
+              : <Menu style={{ width: 22, height: 22 }} />
+            }
+          </button>
         </div>
+
+        {/* Mobile menu panel */}
+        {mobileMenuOpen && (
+          <div style={{
+            borderTop: "1px solid #e5e7eb",
+            background: "#fff", padding: "16px 24px 24px",
+          }}>
+            {[
+              { label: "Features", id: "features" },
+              { label: "How it works", id: "how-it-works" },
+              { label: "Pricing", id: "pricing" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollTo(item.id)}
+                style={{
+                  display: "block", width: "100%",
+                  textAlign: "left", background: "none",
+                  border: "none", padding: "12px 0",
+                  fontSize: 16, color: "#374151",
+                  cursor: "pointer", fontFamily: "inherit",
+                  borderBottom: "1px solid #f3f4f6",
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+              <Link to="/login" style={{
+                display: "block", textAlign: "center",
+                padding: "11px", borderRadius: 8,
+                border: "1px solid #e5e7eb",
+                color: "#374151", textDecoration: "none",
+                fontSize: 15, fontWeight: 500,
+              }}>
+                Log in
+              </Link>
+              <Link to="/login" style={{
+                display: "block", textAlign: "center",
+                padding: "11px", borderRadius: 8,
+                background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                color: "#fff", textDecoration: "none",
+                fontSize: 15, fontWeight: 600,
+              }}>
+                Get started free →
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
-      {/* ── Hero ─────────────────────────────────────────────────── */}
+      {/* ── Hero ── */}
       <section style={{
         background: "linear-gradient(160deg, #f8f7ff 0%, #f0f9ff 100%)",
         padding: "80px 24px 100px",
@@ -106,7 +204,6 @@ function Home() {
         position: "relative",
         overflow: "hidden",
       }}>
-        {/* Background glow */}
         <div style={{
           position: "absolute", top: -100, left: "50%",
           transform: "translateX(-50%)",
@@ -116,7 +213,6 @@ function Home() {
         }} />
 
         <div style={{ maxWidth: 800, margin: "0 auto", position: "relative" }}>
-          {/* Badge */}
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             background: "#fff", border: "1px solid #e5e7eb",
@@ -152,7 +248,7 @@ function Home() {
             in one seamless flow.
           </p>
 
-          <div style={{
+          <div className="hero-buttons" style={{
             display: "flex", gap: 12, justifyContent: "center",
             flexWrap: "wrap",
           }}>
@@ -166,26 +262,28 @@ function Home() {
               Start for free
               <ArrowRight style={{ width: 16, height: 16 }} />
             </Link>
-            <a href="#how-it-works" style={{
-              background: "#fff", color: "#374151",
-              padding: "14px 28px", borderRadius: 10,
-              fontSize: 16, fontWeight: 600, textDecoration: "none",
-              border: "1px solid #e5e7eb",
-              display: "inline-flex", alignItems: "center", gap: 8,
-            }}>
+            <button
+              onClick={() => scrollTo("how-it-works")}
+              style={{
+                background: "#fff", color: "#374151",
+                padding: "14px 28px", borderRadius: 10,
+                fontSize: 16, fontWeight: 600,
+                border: "1px solid #e5e7eb",
+                display: "inline-flex", alignItems: "center", gap: 8,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
               See how it works
-            </a>
+            </button>
           </div>
 
-          <p style={{
-            marginTop: 16, fontSize: 13, color: "#9ca3af",
-          }}>
+          <p style={{ marginTop: 16, fontSize: 13, color: "#9ca3af" }}>
             No credit card required · Free forever plan available
           </p>
         </div>
       </section>
 
-      {/* ── Stats Bar ────────────────────────────────────────────── */}
+      {/* ── Stats Bar ── */}
       <section style={{
         background: "#fff", borderBottom: "1px solid #f3f4f6",
         padding: "32px 24px",
@@ -198,9 +296,7 @@ function Home() {
         }}>
           {stats.map((s) => (
             <div key={s.label}>
-              <div style={{
-                fontSize: 28, fontWeight: 700, color: "#111827",
-              }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: "#111827" }}>
                 {s.value}
               </div>
               <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>
@@ -211,23 +307,18 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Features ─────────────────────────────────────────────── */}
-      <section id="features" style={{
-        padding: "96px 24px", background: "#fafafa",
-      }}>
+      {/* ── Features ── */}
+      <section id="features" style={{ padding: "96px 24px", background: "#fafafa" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{
               fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700,
-              color: "#111827", margin: "0 0 12px",
-              letterSpacing: "-0.5px",
+              color: "#111827", margin: "0 0 12px", letterSpacing: "-0.5px",
             }}>
               Everything your clients need
             </h2>
-            <p style={{ fontSize: 16, color: "#6b7280", maxWidth: 480,
-              margin: "0 auto" }}>
-              One portal link replaces the entire back-and-forth of
-              new client onboarding.
+            <p style={{ fontSize: 16, color: "#6b7280", maxWidth: 480, margin: "0 auto" }}>
+              One portal link replaces the entire back-and-forth of new client onboarding.
             </p>
           </div>
 
@@ -237,11 +328,13 @@ function Home() {
             gap: 24,
           }}>
             {features.map((f) => (
-              <div key={f.title} style={{
-                background: "#fff", borderRadius: 16,
-                border: "1px solid #e5e7eb", padding: 28,
-                transition: "transform 0.2s, box-shadow 0.2s",
-              }}
+              <div
+                key={f.title}
+                style={{
+                  background: "#fff", borderRadius: 16,
+                  border: "1px solid #e5e7eb", padding: 28,
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-4px)";
                   e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.08)";
@@ -259,14 +352,10 @@ function Home() {
                 }}>
                   <f.icon style={{ width: 20, height: 20, color: "#fff" }} />
                 </div>
-                <h3 style={{
-                  fontSize: 16, fontWeight: 600, color: "#111827",
-                  margin: "0 0 8px",
-                }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#111827", margin: "0 0 8px" }}>
                   {f.title}
                 </h3>
-                <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6,
-                  margin: 0 }}>
+                <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6, margin: 0 }}>
                   {f.desc}
                 </p>
               </div>
@@ -275,16 +364,13 @@ function Home() {
         </div>
       </section>
 
-      {/* ── How It Works ─────────────────────────────────────────── */}
-      <section id="how-it-works" style={{
-        padding: "96px 24px", background: "#fff",
-      }}>
+      {/* ── How It Works ── */}
+      <section id="how-it-works" style={{ padding: "96px 24px", background: "#fff" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{
               fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700,
-              color: "#111827", margin: "0 0 12px",
-              letterSpacing: "-0.5px",
+              color: "#111827", margin: "0 0 12px", letterSpacing: "-0.5px",
             }}>
               Up and running in minutes
             </h2>
@@ -296,7 +382,7 @@ function Home() {
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 40, position: "relative",
+            gap: 40,
           }}>
             {steps.map((step, i) => (
               <div key={step.title} style={{ textAlign: "center" }}>
@@ -309,16 +395,10 @@ function Home() {
                 }}>
                   {i + 1}
                 </div>
-                <h3 style={{
-                  fontSize: 18, fontWeight: 600, color: "#111827",
-                  margin: "0 0 8px",
-                }}>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: "#111827", margin: "0 0 8px" }}>
                   {step.title}
                 </h3>
-                <p style={{
-                  fontSize: 14, color: "#6b7280", lineHeight: 1.6,
-                  margin: 0,
-                }}>
+                <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6, margin: 0 }}>
                   {step.desc}
                 </p>
               </div>
@@ -327,7 +407,7 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Pricing ──────────────────────────────────────────────── */}
+      {/* ── Pricing ── */}
       <section id="pricing" style={{
         padding: "96px 24px",
         background: "linear-gradient(160deg, #f8f7ff 0%, #f0f9ff 100%)",
@@ -336,8 +416,7 @@ function Home() {
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{
               fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700,
-              color: "#111827", margin: "0 0 12px",
-              letterSpacing: "-0.5px",
+              color: "#111827", margin: "0 0 12px", letterSpacing: "-0.5px",
             }}>
               Simple, honest pricing
             </h2>
@@ -358,8 +437,7 @@ function Home() {
                   : "#fff",
                 borderRadius: 20,
                 border: p.featured ? "none" : "1px solid #e5e7eb",
-                padding: 36,
-                position: "relative",
+                padding: 36, position: "relative",
                 boxShadow: p.featured
                   ? "0 20px 60px #6366f144"
                   : "0 2px 12px rgba(0,0,0,0.04)",
@@ -371,7 +449,7 @@ function Home() {
                     background: "#f59e0b", color: "#fff",
                     fontSize: 11, fontWeight: 700,
                     padding: "4px 12px", borderRadius: 999,
-                    letterSpacing: "0.5px",
+                    letterSpacing: "0.5px", whiteSpace: "nowrap",
                   }}>
                     MOST POPULAR
                   </div>
@@ -385,22 +463,34 @@ function Home() {
                   {p.name}
                 </h3>
 
+                {/* ✅ Fixed: show "Free" instead of ₹0 */}
                 <div style={{
                   display: "flex", alignItems: "baseline",
                   gap: 4, margin: "0 0 8px",
                 }}>
-                  <span style={{
-                    fontSize: 40, fontWeight: 800,
-                    color: p.featured ? "#fff" : "#111827",
-                  }}>
-                    ₹{p.price}
-                  </span>
-                  <span style={{
-                    fontSize: 14,
-                    color: p.featured ? "#c7d2fe" : "#9ca3af",
-                  }}>
-                    /month
-                  </span>
+                  {p.price === 0 ? (
+                    <span style={{
+                      fontSize: 40, fontWeight: 800,
+                      color: p.featured ? "#fff" : "#111827",
+                    }}>
+                      Free
+                    </span>
+                  ) : (
+                    <>
+                      <span style={{
+                        fontSize: 40, fontWeight: 800,
+                        color: p.featured ? "#fff" : "#111827",
+                      }}>
+                        ₹{p.price}
+                      </span>
+                      <span style={{
+                        fontSize: 14,
+                        color: p.featured ? "#c7d2fe" : "#9ca3af",
+                      }}>
+                        /month
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <p style={{
@@ -423,8 +513,7 @@ function Home() {
                       color: p.featured ? "#e0e7ff" : "#374151",
                     }}>
                       <CheckCircle2 style={{
-                        width: 16, height: 16, flexShrink: 0,
-                        marginTop: 1,
+                        width: 16, height: 16, flexShrink: 0, marginTop: 1,
                         color: p.featured ? "#a5b4fc" : "#6366f1",
                       }} />
                       {feat}
@@ -433,12 +522,11 @@ function Home() {
                 </ul>
 
                 <Link to="/login" style={{
-                  display: "block", textAlign: "center",
-                  padding: "12px",
+                  display: "block", textAlign: "center", padding: "12px",
                   background: p.featured ? "#fff" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
                   color: p.featured ? "#6366f1" : "#fff",
-                  borderRadius: 10, fontSize: 15,
-                  fontWeight: 600, textDecoration: "none",
+                  borderRadius: 10, fontSize: 15, fontWeight: 600,
+                  textDecoration: "none",
                 }}>
                   {p.cta}
                 </Link>
@@ -448,16 +536,12 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Final CTA ────────────────────────────────────────────── */}
-      <section style={{
-        padding: "96px 24px", textAlign: "center",
-        background: "#fff",
-      }}>
+      {/* ── Final CTA ── */}
+      <section style={{ padding: "96px 24px", textAlign: "center", background: "#fff" }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
           <h2 style={{
             fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700,
-            color: "#111827", margin: "0 0 16px",
-            letterSpacing: "-0.5px",
+            color: "#111827", margin: "0 0 16px", letterSpacing: "-0.5px",
           }}>
             Ready to wow your next client?
           </h2>
@@ -484,45 +568,40 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Footer ───────────────────────────────────────────────── */}
-      <footer style={{
-        background: "#111827", padding: "48px 24px",
-        color: "#9ca3af",
-      }}>
+      {/* ── Footer ── */}
+      <footer style={{ background: "#111827", padding: "48px 24px", color: "#9ca3af" }}>
         <div style={{
           maxWidth: 1100, margin: "0 auto",
           display: "flex", flexWrap: "wrap",
           justifyContent: "space-between",
           alignItems: "center", gap: 24,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: 6,
-              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-              display: "flex", alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <Sparkles style={{ width: 13, height: 13, color: "#fff" }} />
-            </div>
-            <span style={{
-              color: "#fff", fontSize: 16, fontWeight: 700,
-            }}>
-              Onboardly
-            </span>
-          </div>
+          <Logo size={28} variant="full" dark={true} />
 
-          <div style={{ display: "flex", gap: 32 }}>
-            {["Features", "Pricing", "Login"].map((item) => (
-              <a key={item} href={
-                item === "Login" ? "/login" :
-                item === "Features" ? "#features" : "#pricing"
-              } style={{
-                color: "#9ca3af", textDecoration: "none",
-                fontSize: 14,
-              }}>
-                {item}
-              </a>
+          <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+            {[
+              { label: "Features", id: "features" },
+              { label: "How it works", id: "how-it-works" },
+              { label: "Pricing", id: "pricing" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollTo(item.id)}
+                style={{
+                  background: "none", border: "none",
+                  color: "#9ca3af", cursor: "pointer",
+                  fontSize: 14, fontFamily: "inherit",
+                  padding: 0,
+                }}
+              >
+                {item.label}
+              </button>
             ))}
+            <Link to="/login" style={{
+              color: "#9ca3af", textDecoration: "none", fontSize: 14,
+            }}>
+              Login
+            </Link>
           </div>
 
           <p style={{ fontSize: 13, margin: 0 }}>
@@ -530,7 +609,6 @@ function Home() {
           </p>
         </div>
       </footer>
-
     </div>
   );
 }
