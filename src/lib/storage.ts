@@ -7,12 +7,23 @@ export type PortalProgress = {
   meetingBooked: boolean;
 };
 
+export type StepsEnabled = {
+  form: boolean;
+  files: boolean;
+  payment: boolean;
+  meeting: boolean;
+};
+
 export type Portal = {
   id: string;
   user_id?: string;
   portalName: string;
   clientName: string;
   clientEmail?: string;
+  clientPhone?: string;       // ← NEW
+  clientCompany?: string;     // ← NEW
+  projectDeadline?: string;   // ← NEW
+  internalNotes?: string;     // ← NEW
   welcomeMessage: string;
   brandLogo: string;
   paymentLink: string;
@@ -23,6 +34,7 @@ export type Portal = {
   createdAt: string;
   progress: PortalProgress;
   brandColor?: string;
+  stepsEnabled?: StepsEnabled; // ← NEW
 };
 
 function mapDbToPortal(row: any): Portal {
@@ -32,6 +44,10 @@ function mapDbToPortal(row: any): Portal {
     portalName: row.portal_name,
     clientName: row.client_name,
     clientEmail: row.client_email || "",
+    clientPhone: row.client_phone || "",         // ← NEW
+    clientCompany: row.client_company || "",     // ← NEW
+    projectDeadline: row.project_deadline || "", // ← NEW
+    internalNotes: row.internal_notes || "",     // ← NEW
     welcomeMessage: row.welcome_message || "",
     brandLogo: row.brand_logo || "",
     paymentLink: row.payment_link || "",
@@ -46,6 +62,12 @@ function mapDbToPortal(row: any): Portal {
       filesUploaded: false,
       paymentCompleted: false,
       meetingBooked: false,
+    },
+    stepsEnabled: row.steps_enabled || {         // ← NEW
+      form: true,
+      files: true,
+      payment: true,
+      meeting: true,
     },
   };
 }
@@ -87,6 +109,10 @@ export const portalStore = {
       portal_name: data.portalName,
       client_name: data.clientName,
       client_email: data.clientEmail || "",
+      client_phone: data.clientPhone || "",           // ← NEW
+      client_company: data.clientCompany || "",       // ← NEW
+      project_deadline: data.projectDeadline || null, // ← NEW
+      internal_notes: data.internalNotes || "",       // ← NEW
       welcome_message: data.welcomeMessage,
       brand_logo: data.brandLogo,
       payment_link: data.paymentLink,
@@ -95,6 +121,12 @@ export const portalStore = {
       notes: data.notes || "",
       brand_color: data.brandColor || "",
       archived: false,
+      steps_enabled: data.stepsEnabled || {           // ← NEW
+        form: true,
+        files: true,
+        payment: true,
+        meeting: true,
+      },
       progress: {
         formComplete: false,
         filesUploaded: false,
@@ -122,20 +154,26 @@ export const portalStore = {
 
     if (updates.portalName !== undefined)
       payload.portal_name = updates.portalName;
-
     if (updates.clientName !== undefined)
       payload.client_name = updates.clientName;
-
     if (updates.clientEmail !== undefined)
       payload.client_email = updates.clientEmail;
-
-    if (updates.notes !== undefined) payload.notes = updates.notes;
-
+    if (updates.clientPhone !== undefined)
+      payload.client_phone = updates.clientPhone;       // ← NEW
+    if (updates.clientCompany !== undefined)
+      payload.client_company = updates.clientCompany;   // ← NEW
+    if (updates.projectDeadline !== undefined)
+      payload.project_deadline = updates.projectDeadline; // ← NEW
+    if (updates.internalNotes !== undefined)
+      payload.internal_notes = updates.internalNotes;   // ← NEW
+    if (updates.notes !== undefined)
+      payload.notes = updates.notes;
     if (updates.archived !== undefined)
       payload.archived = updates.archived;
-
     if (updates.progress !== undefined)
       payload.progress = updates.progress;
+    if (updates.stepsEnabled !== undefined)
+      payload.steps_enabled = updates.stepsEnabled;     // ← NEW
 
     const { error } = await supabase
       .from("portals")
