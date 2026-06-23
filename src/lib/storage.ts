@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import type { FormQuestion } from "./formTypes";
 
 export type PortalProgress = {
   formComplete: boolean;
@@ -35,6 +36,7 @@ export type Portal = {
   progress: PortalProgress;
   brandColor?: string;
   stepsEnabled?: StepsEnabled; // ← NEW
+  custom_questions?: FormQuestion[]; 
 };
 
 function mapDbToPortal(row: any): Portal {
@@ -63,6 +65,7 @@ function mapDbToPortal(row: any): Portal {
       paymentCompleted: false,
       meetingBooked: false,
     },
+    custom_questions: row.custom_questions || [],
     stepsEnabled: row.steps_enabled || {         // ← NEW
       form: true,
       files: true,
@@ -121,6 +124,7 @@ export const portalStore = {
       notes: data.notes || "",
       brand_color: data.brandColor || "",
       archived: false,
+      custom_questions: data.custom_questions || [],
       steps_enabled: data.stepsEnabled || {           // ← NEW
         form: true,
         files: true,
@@ -173,7 +177,9 @@ export const portalStore = {
     if (updates.progress !== undefined)
       payload.progress = updates.progress;
     if (updates.stepsEnabled !== undefined)
-      payload.steps_enabled = updates.stepsEnabled;     // ← NEW
+      payload.steps_enabled = updates.stepsEnabled; 
+    if (updates.custom_questions !== undefined)
+      payload.custom_questions = updates.custom_questions;    // ← NEW
 
     const { error } = await supabase
       .from("portals")
@@ -204,3 +210,5 @@ export const portalStore = {
     if (error) throw error;
   },
 };
+
+

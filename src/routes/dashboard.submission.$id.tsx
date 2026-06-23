@@ -94,6 +94,41 @@ function SubmissionViewer() {
   const completedCount = steps.filter((s) => s.done).length;
   const progressPct = Math.round((completedCount / steps.length) * 100);
   const projectDetails = submission?.project_details || {};
+  {submission?.custom_answers &&
+  Object.keys(submission.custom_answers).length > 0 && (
+    <>
+      <div style={{
+        fontSize: 11, fontWeight: 600, color: "#6366f1",
+        letterSpacing: "0.6px", textTransform: "uppercase",
+        margin: "16px 0 8px", paddingTop: 12,
+        borderTop: "1px solid #e5e7eb",
+      }}>
+        Custom Questions
+      </div>
+      {portal?.custom_questions?.map((q) => (
+        submission.custom_answers[q.id] && (
+          <div key={q.id} style={{
+            padding: "12px 16px", borderRadius: 10,
+            background: "#fafafa", border: "1px solid #e5e7eb",
+          }}>
+            <p style={{
+              margin: "0 0 4px", fontSize: 11,
+              fontWeight: 600, color: "#9ca3af",
+              textTransform: "uppercase", letterSpacing: "0.6px",
+            }}>
+              {q.label}
+            </p>
+            <p style={{
+              margin: 0, fontSize: 14,
+              color: "#111827", lineHeight: 1.6,
+            }}>
+              {submission.custom_answers[q.id]}
+            </p>
+          </div>
+        )
+      ))}
+    </>
+  )}
 
   function formatSize(bytes: number) {
     if (!bytes) return "";

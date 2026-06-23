@@ -15,6 +15,8 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { FormBuilder } from "@/components/FormBuilder";
+import type { FormQuestion } from "@/lib/formTypes";
 
 export const Route = createFileRoute("/dashboard/new/")({
   component: NewPortalPage,
@@ -44,12 +46,14 @@ interface FormState {
     payment: boolean;
     meeting: boolean;
   };
+  
+  custom_questions: FormQuestion[];
 }
 
 function NewPortalPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<"template" | "form">("template");
-  const [activeSection, setActiveSection] = useState<"client" | "branding" | "links" | "steps">("client");
+  const [activeSection, setActiveSection] = useState<"client" | "branding" | "links" | "steps" | "form">("client");
   const [showPreview, setShowPreview] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [error, setError] = useState("");
@@ -75,6 +79,7 @@ function NewPortalPage() {
       payment: true,
       meeting: true,
     },
+    custom_questions: [],
   });
 
   useEffect(() => {
@@ -171,6 +176,7 @@ function NewPortalPage() {
         brandColor: form.brandColor,
         stepsEnabled: form.stepsEnabled,
         archived: false,
+        custom_questions: form.custom_questions, // ← ADD THIS
       });
 
       if (!portal?.id) throw new Error("Portal creation failed");
@@ -208,13 +214,13 @@ function NewPortalPage() {
     return <TemplatePicker onSelect={handleTemplateSelect} />;
   }
 
-  const sections = [
-    { id: "client", label: "Client Info", emoji: "👤" },
-    { id: "branding", label: "Branding", emoji: "🎨" },
-    { id: "links", label: "Links", emoji: "🔗" },
-    { id: "steps", label: "Steps", emoji: "📋" },
-  ] as const;
-
+  const sections: { id: "client" | "branding" | "links" | "steps" | "form"; label: string; emoji: string }[] = [
+  { id: "client", label: "Client Info", emoji: "👤" },
+  { id: "branding", label: "Branding", emoji: "🎨" },
+  { id: "links", label: "Links", emoji: "🔗" },
+  { id: "steps", label: "Steps", emoji: "📋" },
+  { id: "form", label: "Form", emoji: "📋" },
+];
   return (
     <div style={{
       minHeight: "100vh",
@@ -777,6 +783,28 @@ function NewPortalPage() {
                         </p>
                       )}
                     </div>
+
+                    {/* ── CUSTOM FORM ── */}
+                    {activeSection === "form" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                    <SectionHeader
+                      title="Custom Intake Questions"
+                      desc="Add questions your client answers during onboarding."
+                    />
+
+    <FormBuilder
+      questions={form.custom_questions}
+      onChange={(questions) => updateField("custom_questions", questions)}
+    />
+
+    <NavButtons
+  onBack={() => setActiveSection("links")}
+  onNext={() => setActiveSection("form")}
+  nextLabel="Next: Custom Form →"
+  color={form.brandColor}
+/>
+  </div>
+)}  
 
                     {/* Toggle */}
                     {!step.required && (
