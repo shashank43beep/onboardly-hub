@@ -18,6 +18,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalIdRouteImport } from './routes/portal.$id'
 import { Route as DashboardTeamRouteImport } from './routes/dashboard.team'
+import { Route as DashboardRecoveryRouteImport } from './routes/dashboard.recovery'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
 import { Route as DashboardNewIndexRouteImport } from './routes/dashboard.new.index'
 import { Route as DashboardSubmissionIdRouteImport } from './routes/dashboard.submission.$id'
@@ -68,6 +69,11 @@ const DashboardTeamRoute = DashboardTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardRecoveryRoute = DashboardRecoveryRouteImport.update({
+  id: '/recovery',
+  path: '/recovery',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const AcceptInviteTokenRoute = AcceptInviteTokenRouteImport.update({
   id: '/accept-invite/$token',
   path: '/accept-invite/$token',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
+  '/dashboard/recovery': typeof DashboardRecoveryRoute
   '/dashboard/team': typeof DashboardTeamRoute
   '/portal/$id': typeof PortalIdRoute
   '/dashboard/activity/$id': typeof DashboardActivityIdRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
+  '/dashboard/recovery': typeof DashboardRecoveryRoute
   '/dashboard/team': typeof DashboardTeamRoute
   '/portal/$id': typeof PortalIdRoute
   '/dashboard/activity/$id': typeof DashboardActivityIdRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
+  '/dashboard/recovery': typeof DashboardRecoveryRoute
   '/dashboard/team': typeof DashboardTeamRoute
   '/portal/$id': typeof PortalIdRoute
   '/dashboard/activity/$id': typeof DashboardActivityIdRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/accept-invite/$token'
+    | '/dashboard/recovery'
     | '/dashboard/team'
     | '/portal/$id'
     | '/dashboard/activity/$id'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/accept-invite/$token'
+    | '/dashboard/recovery'
     | '/dashboard/team'
     | '/portal/$id'
     | '/dashboard/activity/$id'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/accept-invite/$token'
+    | '/dashboard/recovery'
     | '/dashboard/team'
     | '/portal/$id'
     | '/dashboard/activity/$id'
@@ -260,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTeamRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/recovery': {
+      id: '/dashboard/recovery'
+      path: '/recovery'
+      fullPath: '/dashboard/recovery'
+      preLoaderRoute: typeof DashboardRecoveryRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/accept-invite/$token': {
       id: '/accept-invite/$token'
       path: '/accept-invite/$token'
@@ -292,6 +311,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardRecoveryRoute: typeof DashboardRecoveryRoute
   DashboardTeamRoute: typeof DashboardTeamRoute
   DashboardActivityIdRoute: typeof DashboardActivityIdRoute
   DashboardSubmissionIdRoute: typeof DashboardSubmissionIdRoute
@@ -299,6 +319,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardRecoveryRoute: DashboardRecoveryRoute,
   DashboardTeamRoute: DashboardTeamRoute,
   DashboardActivityIdRoute: DashboardActivityIdRoute,
   DashboardSubmissionIdRoute: DashboardSubmissionIdRoute,
