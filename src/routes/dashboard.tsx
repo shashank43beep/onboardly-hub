@@ -205,6 +205,21 @@ function DashboardPage() {
             <Logo size={28} variant="full" />
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <button
+                onClick={() => window.location.assign("/dashboard/recovery")}
+                style={{
+                  ...btnGhost,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  borderColor: "#c7d2fe",
+                  background: "#eef2ff",
+                  color: "#4f46e5",
+                  fontWeight: 600,
+                }}
+              >
+                🤖 Recovery Agent
+              </button>
+              <button
                 onClick={() => window.location.assign("/dashboard/new")}
                 style={{
                   padding: "9px 16px", borderRadius: 8,

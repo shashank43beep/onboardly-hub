@@ -129,6 +129,29 @@ export function RecoveryDashboard({ batchId }: RecoveryDashboardProps) {
         </Button>
       </div>
 
+      {batch?.status === 'pending' && (
+        <div className="p-4 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-xl flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-indigo-600 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-indigo-950 dark:text-indigo-200">
+                Batch Ready for Autonomous Recovery Execution
+              </p>
+              <p className="text-xs text-indigo-700 dark:text-indigo-400 mt-0.5">
+                Run <code className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900 rounded font-mono font-medium">npx tsx scripts/run-batch.ts {batch.id}</code> in terminal to execute recovery policies and generate explainable audit trails.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
+            onClick={() => refetch()}
+          >
+            Check Status
+          </Button>
+        </div>
+      )}
+
       {/* ── Summary KPI Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Recovered Revenue */}

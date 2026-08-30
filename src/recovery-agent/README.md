@@ -6,6 +6,39 @@ An autonomous, bounded, explainable, and gated AI recovery agent designed to aut
 
 ## 📌 Architecture & Design Principles
 
+```
+                       ┌───────────────────────────────┐
+                       │   Failed / Overdue Event     │
+                       └──────────────┬────────────────┘
+                                      │
+                                      ▼
+                      ┌─────────────────────────────────┐
+                      │    Bounded Policy Engine        │
+                      │  - Max 3 Retries                │
+                      │  - Max 3 Reminders              │
+                      │  - ₹50,000 High-Value Threshold │
+                      └──────────────┬──────────────────┘
+                                     │
+                 ┌───────────────────┴───────────────────┐
+                 │                                       │
+        [Safe & Within Limits]                  [Guardrail Triggered]
+                 ▼                                       ▼
+    ┌─────────────────────────┐             ┌─────────────────────────┐
+    │   Autonomous Action     │             │    Gated Escalation     │
+    │  - Smart Payout Retry   │             │  - Human Signoff        │
+    │  - 1-Click Recovery Link│             │  - Account Manager Alert│
+    │  - Method Update Prompt │             │  - Audit Reason Logged  │
+    └────────────┬────────────┘             └────────────┬────────────┘
+                 │                                       │
+                 └───────────────────┬───────────────────┘
+                                     │
+                                     ▼
+                      ┌─────────────────────────────────┐
+                      │   Immutable Audit Trail Table   │
+                      │       `recovery_actions`        │
+                      └─────────────────────────────────┘
+```
+
 ### 1. Bounded Guardrails
 Runaway automated dunning destroys client relationships. The agent operates within strict, deterministic boundaries:
 - **Maximum Retries (`MAX_RETRIES = 3`)**: Limits automated payment gateway recharges. Halts retries to prevent card issuer fraud flags.
@@ -67,3 +100,6 @@ Execute the agent against the seeded batch to process transactions, enforce guar
 ```bash
 npx tsx scripts/run-batch.ts <batch_id>
 ```
+
+### 4. Inspect Results via UI
+Open `http://localhost:5173/dashboard/recovery` to view the live batch metrics, transaction states, and explainable audit trail in the web dashboard.
