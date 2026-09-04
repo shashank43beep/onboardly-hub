@@ -90,32 +90,28 @@ export const GUARDRAILS = {
  * Creates or retrieves a Supabase client configured with the service role key or anon key.
  */
 export function getSupabaseClient(): SupabaseClient {
-  let supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  let supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    // Attempt to load from .env file if running in node/tsx
-    try {
-      const envPath = path.resolve(process.cwd(), '.env');
-      if (fs.existsSync(envPath)) {
-        const content = fs.readFileSync(envPath, 'utf8');
-        for (const line of content.split(/\r?\n/)) {
-          const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
-          if (match) {
-            const key = match[1].trim();
-            const val = (match[2] || '').trim();
-            if (!process.env[key]) {
-              process.env[key] = val;
-            }
+  // Fill any missing process.env keys from .env (including GROQ_API_KEY for AI diagnosis).
+  try {
+    const envPath = path.resolve(process.cwd(), '.env');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      for (const line of content.split(/\r?\n/)) {
+        const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+        if (match) {
+          const key = match[1].trim();
+          const val = (match[2] || '').trim().replace(/^["']|["']$/g, '');
+          if (!process.env[key] || !String(process.env[key]).trim()) {
+            process.env[key] = val;
           }
         }
-        supabaseUrl = supabaseUrl || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-        supabaseKey = supabaseKey || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
       }
-    } catch {
-      // ignore
     }
+  } catch {
+    // ignore
   }
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error(
@@ -126,12 +122,124 @@ export function getSupabaseClient(): SupabaseClient {
   return createClient(supabaseUrl.trim(), supabaseKey.trim());
 }
 
+// ============================================================================
+// AI DIAGNOSIS LAYER — advisory only. The deterministic GUARDRAILS and the
+// existing evaluateTransactionDecision logic remain the sole authority that
+// decides and executes recovery actions. The AI never has financial authority
+// — it can only:
+//   1. Enrich the audit-trail reasoning text with a plain-language diagnosis
+//   2. Request MORE caution (escalate to human) when highly confident —
+//      it can never request LESS caution than the policy engine already allows
+//
+// If the AI call fails, times out, or returns something malformed, the
+// agent falls back silently to the existing deterministic behavior —
+// nothing about the batch run breaks if Groq is unreachable.
+// ============================================================================
+
+export interface AIDiagnosis {
+  diagnosis: string;
+  recommended_action: string;
+  confidence: number; // 0–1
+  reasoning: string;
+}
+
+const ALLOWED_AI_ACTIONS = [
+  'retry_payment',
+  'send_reminder',
+  'escalate_to_human',
+  'no_action',
+] as const;
+
 /**
- * Evaluates a single transaction through the explainable, bounded, gated agent policy.
+ * Calls Groq's Llama3 (same provider already used for Onboardly's onboarding
+ * assistant — reuses GROQ_API_KEY) to diagnose a failed transaction and
+ * recommend a recovery action. Returns null on any failure; callers must
+ * treat null as "no AI input available" and proceed with the deterministic
+ * policy alone.
  */
-export function evaluateTransactionDecision(
+export async function diagnoseFailure(
+  tx: RecoveryTransaction
+): Promise<AIDiagnosis | null> {
+  const apiKey = process.env.GROQ_API_KEY?.trim().replace(/^["']|["']$/g, '');
+  if (!apiKey) return null;
+
+  const daysOverdue = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(tx.due_date).getTime()) / 86400000)
+  );
+
+  const prompt = `You are a payment recovery diagnosis assistant. Given a failed or overdue transaction, diagnose the likely cause and recommend ONE recovery action from this fixed set: retry_payment, send_reminder, escalate_to_human, no_action.
+
+Transaction context:
+- Amount: ₹${tx.amount}
+- Failure reason: ${tx.failure_reason ?? 'unknown'}
+- Retry attempts so far: ${tx.retry_count}
+- Reminders sent so far: ${tx.reminder_count}
+- Days overdue: ${daysOverdue}
+- Current status: ${tx.status}
+
+Respond with ONLY a JSON object, no other text:
+{"diagnosis": "<short phrase>", "recommended_action": "<one of the four actions above>", "confidence": <number 0 to 1>, "reasoning": "<one sentence>"}`;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-oss-20b',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.2,
+        max_tokens: 800,
+        response_format: { type: 'json_object' },
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (!content) return null;
+
+    const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+    const diagnosis = String(parsed?.diagnosis ?? '').trim();
+    const reasoning = String(parsed?.reasoning ?? '').trim();
+    const recommended_action = String(parsed?.recommended_action ?? '')
+      .trim()
+      .replace(/\s+/g, '_');
+    const confidence = Number(parsed?.confidence);
+
+    if (
+      !diagnosis ||
+      !reasoning ||
+      !Number.isFinite(confidence) ||
+      !(ALLOWED_AI_ACTIONS as readonly string[]).includes(recommended_action)
+    ) {
+      return null; // malformed — ignore rather than trust
+    }
+
+    return {
+      diagnosis,
+      recommended_action,
+      confidence: Math.max(0, Math.min(1, confidence)),
+      reasoning,
+    };
+  } catch {
+    return null; // network error, timeout, bad JSON — fail safe, no AI input
+  }
+}
+
+function evaluateTransactionDecisionCore(
   tx: RecoveryTransaction,
-  deterministicSeed?: number
+  deterministicSeed: number | undefined,
+  aiDiagnosis: AIDiagnosis | null | undefined
 ): {
   decision: string;
   reasoning: string;
@@ -191,6 +299,32 @@ export function evaluateTransactionDecision(
       newRetryCount: tx.retry_count,
       newReminderCount: tx.reminder_count,
       outcome: 'reminders_exhausted_escalated',
+    };
+  }
+
+  // Rule 3.5: AI-recommended conservative escalation.
+  // The AI can only ever request MORE caution than the deterministic
+  // policy — never less. If it is highly confident a case needs a human
+  // and the deterministic gates above didn't already require one, defer
+  // to that recommendation. The AI never authorizes retries or reminders
+  // on its own — only escalation, which is always the safe direction.
+  if (
+    aiDiagnosis &&
+    aiDiagnosis.recommended_action === 'escalate_to_human' &&
+    aiDiagnosis.confidence >= 0.75 &&
+    tx.status !== 'paid'
+  ) {
+    return {
+      decision: 'escalate_to_human',
+      reasoning: `AI diagnosis: "${aiDiagnosis.diagnosis}" (confidence ${(aiDiagnosis.confidence * 100).toFixed(0)}%). ${aiDiagnosis.reasoning}`,
+      trigger: 'ai_diagnosis: high_confidence_escalation',
+      actionTaken: 'escalated_to_human_ops',
+      gated: true,
+      gateReason: `AI recommended escalation with ${(aiDiagnosis.confidence * 100).toFixed(0)}% confidence`,
+      newStatus: 'escalated',
+      newRetryCount: tx.retry_count,
+      newReminderCount: tx.reminder_count,
+      outcome: 'ai_recommended_escalation',
     };
   }
 
@@ -337,6 +471,27 @@ export function evaluateTransactionDecision(
 }
 
 /**
+ * Evaluates a single transaction through the explainable, bounded, gated
+ * agent policy. Optionally accepts an AI diagnosis to enrich the audit
+ * trail reasoning and, when highly confident, request escalation — the
+ * deterministic policy in evaluateTransactionDecisionCore remains the
+ * sole authority over which actions can actually execute.
+ */
+export function evaluateTransactionDecision(
+  tx: RecoveryTransaction,
+  deterministicSeed?: number,
+  aiDiagnosis?: AIDiagnosis | null
+): ReturnType<typeof evaluateTransactionDecisionCore> {
+  const result = evaluateTransactionDecisionCore(tx, deterministicSeed, aiDiagnosis);
+
+  if (aiDiagnosis && !result.reasoning.startsWith('AI diagnosis:')) {
+    result.reasoning = `AI diagnosis: "${aiDiagnosis.diagnosis}" (confidence ${(aiDiagnosis.confidence * 100).toFixed(0)}%). ${result.reasoning}`;
+  }
+
+  return result;
+}
+
+/**
  * Runs the Recovery Agent on a full batch of transactions.
  * Orchestrates decision making, audit trail logging, state mutation, and metrics aggregation.
  */
@@ -382,8 +537,11 @@ export async function runRecoveryBatch(
   let unresolvedCount = 0;
 
   for (const tx of transactions as RecoveryTransaction[]) {
+    // Get an AI diagnosis first (advisory only — see evaluateTransactionDecision)
+    const aiDiagnosis = tx.status === 'paid' ? null : await diagnoseFailure(tx);
+
     // Evaluate decision through the bounded agent policy
-    const result = evaluateTransactionDecision(tx);
+    const result = evaluateTransactionDecision(tx, undefined, aiDiagnosis);
 
     const observedState = {
       amount: tx.amount,
@@ -393,6 +551,7 @@ export async function runRecoveryBatch(
       reminder_count: tx.reminder_count,
       current_status: tx.status,
       due_date: tx.due_date,
+      ai_diagnosis: aiDiagnosis ?? null,
     };
 
     const action: RecoveryAction = {
